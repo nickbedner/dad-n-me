@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(DadNMe LANGUAGES C VERSION 0.1.0)
+project(DadnMe LANGUAGES C VERSION 0.1.0)
 
 set(CMAKE_C_STANDARD 11)
 
@@ -11,7 +11,7 @@ file(GLOB_RECURSE dadnme_SRC
         include/*.h
         src/*.c)
 
-add_executable(DadNMe ${dadnme_SRC})
+add_executable(DadnMe ${dadnme_SRC})
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 if(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -54,7 +54,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-visibility -Wno-pragma-pack -Wno-deprec
 #        message("Some other build type.")
 #endif()
 
-target_link_libraries(DadNMe mana)
+target_link_libraries(DadnMe mana)
 
 set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -68,9 +68,11 @@ set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/lib/glfw/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/lib/Vulkan-Headers/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/lib/chaos/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/lib/libsndfile/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/lib/libsoundio/soundio
         ${OpenMP_CXX_LIBRARIES})
 
-target_include_directories(DadNMe PUBLIC ${includeList})
+target_include_directories(DadnMe PUBLIC ${includeList})
 
 if (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "AMD64")
         set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/Bin/glslangValidator.exe")
@@ -94,7 +96,7 @@ foreach(GLSL ${GLSL_SOURCE_FILES})
 endforeach(GLSL)
 
 add_custom_target(Shaders DEPENDS ${SPIRV_BINARY_FILES})
-add_dependencies(DadNMe Shaders)
+add_dependencies(DadnMe Shaders)
 
 file(GLOB_RECURSE ALL_ASSETS
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/assets/*)
@@ -103,4 +105,4 @@ add_custom_target(Assets ALL
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/assets ${PROJECT_BINARY_DIR}/assets
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/assets)
 
-add_dependencies(DadNMe Assets)
+add_dependencies(DadnMe Assets)
