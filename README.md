@@ -1,8 +1,9 @@
-# HelloC
+# Dad 'n Me
 
-A simple template for creating a new C program with CMake and LLVM in VSCode.
+An open source remake of Dad 'n Me by Dan, Tom, Dustball, and Stamper
+https://www.newgrounds.com/portal/view/254456
 
 ### Setting Up a Project
 
-`git clone --recursive https://github.com/nickbedner/helloc`  
+`git clone --recursive https://github.com/nickbedner/dad-n-me`  
 Tested with Clang 11.0.0 on Windows.
