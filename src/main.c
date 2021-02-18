@@ -1,4 +1,5 @@
 // Launches a window for rendering then closes window and exits program
+#undef __cplusplus
 
 #include <mana/core/memoryallocator.h>
 //
@@ -6,69 +7,143 @@
 #define SOUNDIO_STATIC_LIBRARY
 #include <sndfile.h>
 #include <soundio.h>
+#include <stdbool.h>
 
-struct PassThrough {
+struct AudioClip {
   SF_INFO sfinfo;
   SNDFILE* infile;
+  float seconds_offset;
+  bool loop;
+  float volume;
 };
 
-static float seconds_offset = 0.0f;
+// Lower the value, the more accurate the audio, but risk overloading audio device queue
+/*#define AUDIO_BUFFER 2 * 1024
 static void write_callback(struct SoundIoOutStream* outstream, int frame_count_min, int frame_count_max) {
+  // Needed to determine max output channels
   const struct SoundIoChannelLayout* layout = &outstream->layout;
   struct SoundIoChannelArea* areas;
-  int frames_left = frame_count_max;
+  float float_sample_rate = (float)outstream->sample_rate;
+  float seconds_per_frame = 1.0f / float_sample_rate;
   int err;
 
-  struct PassThrough* pass = outstream->userdata;
-  SNDFILE* infile = pass->infile;
-  SF_INFO sfinfo = pass->sfinfo;
+  struct ArrayList* audio_clips = outstream->userdata;
+
+  int device_channels = layout->channel_count;
+  int buffer_size = device_channels * AUDIO_BUFFER;
+
+  if ((err = soundio_outstream_begin_write(outstream, &areas, &buffer_size))) {
+    fprintf(stderr, "%s\n", soundio_strerror(err));
+    exit(1);
+  }
+
+  if (!buffer_size)
+    return;
+
+  for (int audio_clip_num = 0; audio_clip_num < array_list_size(audio_clips); audio_clip_num++) {
+    struct AudioClip* audio_clip = array_list_get(audio_clips, audio_clip_num);
+    SNDFILE* infile = audio_clip->infile;
+    SF_INFO sfinfo = audio_clip->sfinfo;
+    soundio_outstream_set_volume(outstream, audio_clip->volume);
+    int channels = sfinfo.channels;
+
+    int frames_left = AUDIO_BUFFER;
+    int readcount = 0;
+    while (frames_left > 0) {
+      float* buff = calloc(channels * frames_left, sizeof(float));
+      sf_seek(infile, audio_clip->seconds_offset * (float_sample_rate * ((float)sfinfo.samplerate / float_sample_rate)), SEEK_SET);
+      readcount += sf_readf_float(infile, buff + ((AUDIO_BUFFER - frames_left) * device_channels), frames_left);
+      //printf("Frame count: %d Read count: %d\n", frames_left, readcount);
+
+      for (int frame = 0; frame < readcount; frame++) {
+        for (int channel = 0; channel < channels; channel++) {
+          // Mono, only one speaker?
+          //float sample = buff[(int)(seconds_offset + frame * float_sample_rate) + channel];
+          // Stereo
+          float sample = buff[(int)(audio_clip->seconds_offset + frame * ((float)sfinfo.samplerate / float_sample_rate)) * 2 + channel];
+          float* ptr = (float*)(areas[channel].ptr + areas[channel].step * frame);
+          *ptr = sample;
+          if (*ptr > 1.0f)
+            *ptr = 1.0f;
+        }
+      }
+
+      audio_clip->seconds_offset = audio_clip->seconds_offset + seconds_per_frame * readcount;
+      if (readcount < frames_left && audio_clip->loop == true)
+        audio_clip->seconds_offset = 0.0f;
+      else
+        break;
+
+      frames_left -= readcount;
+      free(buff);
+    }
+  }
+
+  if ((err = soundio_outstream_end_write(outstream))) {
+    fprintf(stderr, "%s\n", soundio_strerror(err));
+    exit(1);
+  }
+}*/
+
+// Lower the value, the more accurate the audio, but risk overloading audio device queue
+#define AUDIO_BUFFER 2 * 1024
+static void write_callback(struct SoundIoOutStream* outstream, int frame_count_min, int frame_count_max) {
+  // Needed to determine max output channels
+  const struct SoundIoChannelLayout* layout = &outstream->layout;
+  struct SoundIoChannelArea* areas;
+  int err;
+
+  struct ArrayList* audio_clips = outstream->userdata;
+  struct AudioClip* audio_clip = array_list_get(audio_clips, 0);
+  SNDFILE* infile = audio_clip->infile;
+  SF_INFO sfinfo = audio_clip->sfinfo;
   int channels = sfinfo.channels;
+  soundio_outstream_set_volume(outstream, audio_clip->volume);
 
   float float_sample_rate = (float)outstream->sample_rate;
   float seconds_per_frame = 1.0f / float_sample_rate;
 
-  while (frames_left > 0) {
-    int frame_count = frames_left;
+  float* buff = calloc(channels * AUDIO_BUFFER, sizeof(float));
 
-    if ((err = soundio_outstream_begin_write(outstream, &areas, &frame_count))) {
-      fprintf(stderr, "%s\n", soundio_strerror(err));
-      exit(1);
-    }
+  int frames_left = AUDIO_BUFFER;
+  int readcount = 0;
+  while (audio_clip->loop == true && frames_left > 0) {
+    sf_seek(infile, audio_clip->seconds_offset * (float_sample_rate * ((float)sfinfo.samplerate / float_sample_rate)), SEEK_SET);
+    readcount += sf_readf_float(infile, buff + ((AUDIO_BUFFER - frames_left) * channels), frames_left);
+    //printf("Frame count: %d Read count: %d\n", frames_left, readcount);
 
-    if (!frame_count)
-      break;
+    audio_clip->seconds_offset = audio_clip->seconds_offset + seconds_per_frame * readcount;
+    if (readcount < frames_left)
+      audio_clip->seconds_offset = 0.0f;
 
-    float* buff = calloc(channels * frame_count, sizeof(float));
-
-    int readcount;
-    sf_count_t frames;
-
-    frames = frame_count;
-
-    sf_seek(infile, seconds_offset * (float_sample_rate * ((float)sfinfo.samplerate / float_sample_rate)), SEEK_SET);
-    readcount = sf_readf_float(infile, buff, frames);
-
-    printf("Frame count: %d Read count: %d\n", frame_count, readcount);
-
-    for (int frame = 0; frame < readcount; frame++) {
-      for (int channel = 0; channel < channels; channel++) {
-        // Mono
-        //float sample = buff[(int)(seconds_offset + frame * float_sample_rate) + channel];
-        // Stereo
-        float sample = buff[(int)(seconds_offset + frame * ((float)sfinfo.samplerate / float_sample_rate)) * 2 + channel];
-        float* ptr = (float*)(areas[channel].ptr + areas[channel].step * frame);
-        *ptr = sample;
-      }
-    }
-    seconds_offset = seconds_offset + seconds_per_frame * frame_count;
-
-    if ((err = soundio_outstream_end_write(outstream))) {
-      fprintf(stderr, "%s\n", soundio_strerror(err));
-      exit(1);
-    }
-
-    frames_left -= frame_count;
+    frames_left -= readcount;
   }
+
+  if ((err = soundio_outstream_begin_write(outstream, &areas, &readcount))) {
+    fprintf(stderr, "%s\n", soundio_strerror(err));
+    exit(1);
+  }
+
+  if (!readcount)
+    return;
+
+  for (int frame = 0; frame < readcount; frame++) {
+    for (int channel = 0; channel < channels; channel++) {
+      // Mono, only one speaker?
+      //float sample = buff[(int)(seconds_offset + frame * float_sample_rate) + channel];
+      // Stereo
+      float sample = buff[(int)(audio_clip->seconds_offset + frame * ((float)sfinfo.samplerate / float_sample_rate)) * 2 + channel];
+      float* ptr = (float*)(areas[channel].ptr + areas[channel].step * frame);
+      *ptr = sample;
+    }
+  }
+
+  if ((err = soundio_outstream_end_write(outstream))) {
+    fprintf(stderr, "%s\n", soundio_strerror(err));
+    exit(1);
+  }
+
+  free(buff);
 }
 
 int main(int argc, char* argv[]) {
@@ -114,18 +189,22 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  struct ArrayList audio_clips = {0};
+  array_list_init(&audio_clips);
+
   SNDFILE* infile = NULL;
   SF_INFO sfinfo;
-
   if ((infile = sf_open("assets/audio/music/Dad_n_Me.wav", SFM_READ, &sfinfo)) == NULL)
     return 1;
+  struct AudioClip* audio_clip = calloc(1, sizeof(struct AudioClip));
+  audio_clip->infile = infile;
+  audio_clip->sfinfo = sfinfo;
+  audio_clip->loop = true;
+  audio_clip->volume = 0.75f;
 
-  struct PassThrough* pass = calloc(1, sizeof(struct PassThrough));
-  pass->infile = infile;
-  pass->sfinfo = sfinfo;
+  array_list_add(&audio_clips, audio_clip);
 
-  outstream->userdata = pass;
-
+  outstream->userdata = &audio_clips;
   outstream->format = SoundIoFormatFloat32NE;
   outstream->write_callback = write_callback;
 
