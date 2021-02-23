@@ -33,18 +33,40 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
 
   fxaa_shader_init(&game->fxaa_shader, gpu_api);
 
-  struct TextureSettings texture1 = {"./assets/textures/alpha.png", FILTER_LINEAR};
+  struct TextureSettings texture1 = {"./assets/textures/fence.png", FILTER_LINEAR};
+  struct TextureSettings texture2 = {"./assets/textures/grass.png", FILTER_LINEAR};
+  struct TextureSettings texture3 = {"./assets/textures/clouds.png", FILTER_LINEAR};
 
   texture_cache_init(&game->texture_cache);
-  texture_cache_add(&game->texture_cache, gpu_api, 1, texture1);
+  texture_cache_add(&game->texture_cache, gpu_api, 3, texture1, texture2, texture3);
 
   sprite_shader_init(&game->sprite_shader, gpu_api);
+
   array_list_init(&game->sprites);
-  for (int loop_num = 0; loop_num < 4; loop_num++) {
+  for (int loop_num = 0; loop_num < 10; loop_num++) {
     struct Sprite* sprite = malloc(sizeof(struct Sprite));
-    sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/alpha.png"));
-    sprite->position = (vec3){.x = loop_num, .y = loop_num, .z = loop_num};
-    sprite->rotation = (quat){.data[0] = loop_num / 3.0f, .data[1] = loop_num / 3.0f, .data[2] = loop_num / 3.0f, .data[3] = 1.0f};
+    sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/fence.png"));
+    sprite->position = (vec3){.x = (loop_num * sprite->width) * 0.92f, .y = 0.0f, .z = loop_num * 0.001f};
+    sprite->rotation = (quat){.data[0] = 0, .data[1] = 0, .data[2] = 0, .data[3] = 1.0f};
+    //sprite->rotation = (quat){.data[0] = loop_num / 3.0f, .data[1] = loop_num / 3.0f, .data[2] = loop_num / 3.0f, .data[3] = 1.0f};
+    array_list_add(&game->sprites, sprite);
+  }
+
+  for (int loop_num = 0; loop_num < 10; loop_num++) {
+    struct Sprite* sprite = malloc(sizeof(struct Sprite));
+    sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/grass.png"));
+    sprite->position = (vec3){.x = (loop_num * sprite->width) * 0.99f, .y = -sprite->height / 2.0, .z = 0.01 + (loop_num * 0.01)};
+    sprite->rotation = (quat){.data[0] = 0, .data[1] = 0, .data[2] = 0, .data[3] = 1.0f};
+    //sprite->rotation = (quat){.data[0] = loop_num / 3.0f, .data[1] = loop_num / 3.0f, .data[2] = loop_num / 3.0f, .data[3] = 1.0f};
+    array_list_add(&game->sprites, sprite);
+  }
+
+  for (int loop_num = 0; loop_num < 2; loop_num++) {
+    struct Sprite* sprite = malloc(sizeof(struct Sprite));
+    sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/clouds.png"));
+    sprite->position = (vec3){.x = (loop_num * sprite->width) * 1.0f, .y = 0.0f, .z = 0.1 + (loop_num * 0.01)};
+    sprite->rotation = (quat){.data[0] = 0, .data[1] = 0, .data[2] = 0, .data[3] = 1.0f};
+    //sprite->rotation = (quat){.data[0] = loop_num / 3.0f, .data[1] = loop_num / 3.0f, .data[2] = loop_num / 3.0f, .data[3] = 1.0f};
     array_list_add(&game->sprites, sprite);
   }
 }

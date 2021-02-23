@@ -49,7 +49,7 @@ void dad_n_me_start(struct DadNMe* dad_n_me) {
       engine->fps_counter.second_frames = engine->fps_counter.frames;
 
       char title_buffer[1024];
-      sprintf(title_buffer, "DadNMe %d", (int)engine->fps_counter.second_frames);
+      sprintf(title_buffer, "Dad n' Me %d", (int)engine->fps_counter.second_frames);
       window_set_title(&dad_n_me->window, title_buffer);
 
       engine->fps_counter.fps = engine->fps_counter.frames;
