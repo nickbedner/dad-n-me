@@ -35,6 +35,8 @@ struct Game {
   struct FXAAShader fxaa_shader;
   int fxaa_on;
 
+  struct Sprite* hud_sprite;
+
   struct ArrayList sprites;
 };
 
