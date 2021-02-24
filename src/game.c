@@ -1,7 +1,7 @@
 #include "game.h"
 
 int split_thread(void* aArg) {
-  printf("Hello world!\n");
+  printf("Staring audio thread!\n");
   audio_manager_start((struct AudioManager*)aArg);
 
   return 0;
@@ -24,7 +24,7 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
 
   game->music_clip = calloc(1, sizeof(struct AudioClip));
   game->fart_clip = calloc(1, sizeof(struct AudioClip));
-  audio_clip_init(game->music_clip, game->music_clip_cache, MUSIC_AUDIO_CLIP, 1, 0.5f, 0.01f);
+  audio_clip_init(game->music_clip, game->music_clip_cache, MUSIC_AUDIO_CLIP, 1, 0.5f, 0.0125f);
   audio_clip_init(game->fart_clip, game->fart_clip_cache, MUSIC_AUDIO_CLIP, 0, 0.75f, 0.0f);
 
   audio_manager_play_audio_clip(game->audio_manager, game->music_clip);
@@ -42,14 +42,14 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   fxaa_shader_init(&game->fxaa_shader, gpu_api);
 
   struct TextureSettings texture1 = {"./assets/textures/fence.psd", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture2 = {"./assets/textures/grass.png", FILTER_NEAREST, MODE_CLAMP_TO_BORDER, 0};
-  struct TextureSettings texture3 = {"./assets/textures/clouds.png", FILTER_NEAREST, MODE_CLAMP_TO_BORDER, 0};
+  struct TextureSettings texture2 = {"./assets/textures/grass.png", FILTER_NEAREST, MODE_CLAMP_TO_BORDER, 0};   // 0
+  struct TextureSettings texture3 = {"./assets/textures/clouds.png", FILTER_NEAREST, MODE_CLAMP_TO_BORDER, 0};  // 0
   struct TextureSettings texture4 = {"./assets/textures/back2.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
   struct TextureSettings texture5 = {"./assets/textures/trash.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
   struct TextureSettings texture6 = {"./assets/textures/sign.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture7 = {"./assets/textures/woodfence.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 0};
-  struct TextureSettings texture8 = {"./assets/textures/grassshadow.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 0};
-  struct TextureSettings texture9 = {"./assets/textures/grassdiffer.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 0};
+  struct TextureSettings texture7 = {"./assets/textures/woodfence.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 0};    // 0
+  struct TextureSettings texture8 = {"./assets/textures/grassshadow.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 0};  // 0
+  struct TextureSettings texture9 = {"./assets/textures/grassdiffer.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 0};  // 0
   struct TextureSettings texture10 = {"./assets/textures/trash2.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
   struct TextureSettings texture11 = {"./assets/textures/sign2.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
   struct TextureSettings texture12 = {"./assets/textures/hud.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
@@ -64,6 +64,7 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
 
   float draw_scale = 1.0f / 5.0f;
 
+  // Draw sprites from front to back for transparencies
   // HUD
   game->hud_sprite = malloc(sizeof(struct Sprite));
   float cloud_scale = 10.0f * draw_scale;
@@ -144,9 +145,8 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   // Background
   struct Sprite* back_sprite = malloc(sizeof(struct Sprite));
   sprite_init(back_sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/back2.png"));
-  float back_scale = 1.0f;
-  back_sprite->position = (vec3){.x = 0.0f, .y = 1.0f, .z = 5.0f};
-  back_sprite->scale = (vec3){.x = back_scale, .y = back_scale, .z = back_scale};
+  back_sprite->position = (vec3){.x = 1.0f, .y = 1.1f, .z = 7.0f};
+  back_sprite->scale = (vec3){.x = draw_scale * 2, .y = draw_scale * 2, .z = draw_scale * 2};
   array_list_add(&game->sprites, back_sprite);
 
   // Clouds
@@ -209,13 +209,12 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
     }
   }
 
-  game->hud_sprite->position = (vec3){.x = game->camera.position.x + 5.5f, .y = game->camera.position.y + 2.9f, .z = game->camera.position.z + 8.0f};
-
   game_update_input(game, &mana->engine);
   game_update_camera(game, &mana->engine);
   camera_update_vectors(&game->camera);
   gpu_api->vulkan_state->gbuffer->projection_matrix = camera_get_projection_matrix(&game->camera, game->window);
   gpu_api->vulkan_state->gbuffer->view_matrix = camera_get_view_matrix(&game->camera);
+  game->hud_sprite->position = (vec3){.x = game->camera.position.x + 5.5f, .y = game->camera.position.y + 2.9f, .z = game->camera.position.z + 8.0f};
   game_update_uniform_buffers(game, &mana->engine);
 
   gbuffer_start(gpu_api->vulkan_state->gbuffer, gpu_api->vulkan_state);

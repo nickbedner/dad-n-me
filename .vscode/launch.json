@@ -9,7 +9,7 @@
       //https://github.com/Microsoft/vscode-cpptools/blob/master/launch.md#environment
       //https://stackoverflow.com/questions/44749665/can-i-replace-calling-the-cmake-ggenerator-option-and-calling-vcvarsall-bat-b
       //https://vector-of-bool.github.io/docs/vscode-cmake-tools/getting_started.html#gs-configuring
-      "name": "HelloC Launch",
+      "name": "Dad n' Me Launch",
       "type": "cppvsdbg",
       "request": "launch",
       "program": "${command:cmake.launchTargetPath}",
