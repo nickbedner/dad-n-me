@@ -29,13 +29,12 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   vec3 added_pos = vec3_scale(game->camera.front, 2);
   game->camera.position = vec3_add(game->camera.position, added_pos);
   game->camera.yaw += 180;
-  //game->camera.orientation = quaternion_mul(game->camera.orientation, (quat){.x = 0.5f, .y = 0.0f, .z = 0.0f, .w = 1.0f});
 
   fxaa_shader_init(&game->fxaa_shader, gpu_api);
 
-  struct TextureSettings texture1 = {"./assets/textures/fence.png", FILTER_LINEAR};
-  struct TextureSettings texture2 = {"./assets/textures/grass.png", FILTER_LINEAR};
-  struct TextureSettings texture3 = {"./assets/textures/clouds.png", FILTER_LINEAR};
+  struct TextureSettings texture1 = {"./assets/textures/fence.png", FILTER_NEAREST, MODE_CLAMP_TO_BORDER, 0};
+  struct TextureSettings texture2 = {"./assets/textures/grass.png", FILTER_NEAREST, MODE_CLAMP_TO_BORDER, 0};
+  struct TextureSettings texture3 = {"./assets/textures/clouds.png", FILTER_NEAREST, MODE_CLAMP_TO_BORDER, 0};
 
   texture_cache_init(&game->texture_cache);
   texture_cache_add(&game->texture_cache, gpu_api, 3, texture1, texture2, texture3);
@@ -46,7 +45,7 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   for (int loop_num = 0; loop_num < 10; loop_num++) {
     struct Sprite* sprite = malloc(sizeof(struct Sprite));
     sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/fence.png"));
-    sprite->position = (vec3){.x = (loop_num * sprite->width) * 0.92f, .y = 0.0f, .z = loop_num * 0.001f};
+    sprite->position = (vec3){.x = (loop_num * sprite->width) * 0.92f, .y = 0.0f, .z = loop_num * 0.000001f};
     sprite->rotation = (quat){.data[0] = 0, .data[1] = 0, .data[2] = 0, .data[3] = 1.0f};
     //sprite->rotation = (quat){.data[0] = loop_num / 3.0f, .data[1] = loop_num / 3.0f, .data[2] = loop_num / 3.0f, .data[3] = 1.0f};
     array_list_add(&game->sprites, sprite);
@@ -55,7 +54,7 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   for (int loop_num = 0; loop_num < 10; loop_num++) {
     struct Sprite* sprite = malloc(sizeof(struct Sprite));
     sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/grass.png"));
-    sprite->position = (vec3){.x = (loop_num * sprite->width) * 0.99f, .y = -sprite->height / 2.0, .z = 0.01 + (loop_num * 0.01)};
+    sprite->position = (vec3){.x = (loop_num * sprite->width) * 0.4f, .y = -sprite->height / 2.0, .z = 0.01 + (loop_num * 0.000001)};
     sprite->rotation = (quat){.data[0] = 0, .data[1] = 0, .data[2] = 0, .data[3] = 1.0f};
     //sprite->rotation = (quat){.data[0] = loop_num / 3.0f, .data[1] = loop_num / 3.0f, .data[2] = loop_num / 3.0f, .data[3] = 1.0f};
     array_list_add(&game->sprites, sprite);
@@ -64,7 +63,7 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   for (int loop_num = 0; loop_num < 2; loop_num++) {
     struct Sprite* sprite = malloc(sizeof(struct Sprite));
     sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/clouds.png"));
-    sprite->position = (vec3){.x = (loop_num * sprite->width) * 1.0f, .y = 0.0f, .z = 0.1 + (loop_num * 0.01)};
+    sprite->position = (vec3){.x = (loop_num * sprite->width) * 1.0f, .y = 0.0f, .z = 0.1 + (loop_num * 0.000001)};
     sprite->rotation = (quat){.data[0] = 0, .data[1] = 0, .data[2] = 0, .data[3] = 1.0f};
     //sprite->rotation = (quat){.data[0] = loop_num / 3.0f, .data[1] = loop_num / 3.0f, .data[2] = loop_num / 3.0f, .data[3] = 1.0f};
     array_list_add(&game->sprites, sprite);
@@ -170,14 +169,8 @@ void game_update_camera(struct Game* game, struct Engine* engine) {
   x_diff *= game->camera.sensitivity;
   y_diff *= game->camera.sensitivity;
 
-  //game->camera.yaw -= x_diff * sin(glm_rad(game->camera.roll)) - y_diff * cos(glm_rad(game->camera.roll));
-  //game->camera.pitch += y_diff * sin(glm_rad(game->camera.roll)) + x_diff * cos(glm_rad(game->camera.roll));
-
-  //game->camera.orientation = quaternion_mul(game->camera.orientation, (quat){.x = -y_diff, .y = -x_diff, .z = 0.0f, .w = 1.0f});
-  //game->camera.orientation = quaternion_mul(game->camera.orientation, (quat){.x = -y_diff, .y = 0.0f, .z = 0.0f, .w = 1.0f});
-  //game->camera.orientation = quaternion_mul(game->camera.orientation, (quat){.x = 0.0f, .y = -x_diff, .z = 0.0f, .w = 1.0f});
-  game->camera.yaw -= x_diff;
-  game->camera.pitch += y_diff;
+  //game->camera.yaw -= x_diff;
+  //game->camera.pitch += y_diff;
 
   if (glfwJoystickIsGamepad(GLFW_JOYSTICK_1)) {
     GLFWgamepadstate state;
