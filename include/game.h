@@ -24,8 +24,11 @@ struct Game {
   struct Window* window;
   struct Camera camera;
 
-  struct AudioManager audio_manager;
-  struct AudioClip music_clip;
+  struct AudioManager* audio_manager;
+  struct AudioClipCache* music_clip_cache;
+  struct AudioClipCache* fart_clip_cache;
+  struct AudioClip* music_clip;
+  struct AudioClip* fart_clip;
 
   struct TextureCache texture_cache;
   struct SpriteShader sprite_shader;

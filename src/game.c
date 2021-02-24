@@ -8,17 +8,26 @@ int split_thread(void* aArg) {
 }
 
 void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
-  audio_manager_init(&game->audio_manager);
+  game->audio_manager = calloc(1, sizeof(struct AudioManager));
+  audio_manager_init(game->audio_manager);
 
   thrd_t t;
-  if (thrd_create(&t, split_thread, &game->audio_manager) == thrd_success)
+  if (thrd_create(&t, split_thread, game->audio_manager) == thrd_success)
     ;
   //thrd_detach(t);
   //thrd_join(t, NULL);
 
-  audio_clip_init(&game->music_clip, "assets/audio/music/Dad_n_Me.wav", MUSIC_AUDIO_CLIP, 1);
+  game->music_clip_cache = calloc(1, sizeof(struct AudioClipCache));
+  game->fart_clip_cache = calloc(1, sizeof(struct AudioClipCache));
+  audio_clip_cache_init(game->music_clip_cache, "assets/audio/music/Dad_n_Me.wav");
+  audio_clip_cache_init(game->fart_clip_cache, "assets/audio/sounds/fart_2.wav");
 
-  audio_manager_play_audio_clip(&game->audio_manager, &game->music_clip);
+  game->music_clip = calloc(1, sizeof(struct AudioClip));
+  game->fart_clip = calloc(1, sizeof(struct AudioClip));
+  audio_clip_init(game->music_clip, game->music_clip_cache, MUSIC_AUDIO_CLIP, 1, 0.5f);
+  audio_clip_init(game->fart_clip, game->fart_clip_cache, MUSIC_AUDIO_CLIP, 0, 0.75f);
+
+  audio_manager_play_audio_clip(game->audio_manager, game->music_clip);
 
   struct GPUAPI* gpu_api = &mana->engine.gpu_api;
   game->fxaa_on = 1;
@@ -26,46 +35,74 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
 
   camera_init(&game->camera);
 
-  vec3 added_pos = vec3_scale(game->camera.front, 2);
+  vec3 added_pos = vec3_scale(game->camera.front, 8);
   game->camera.position = vec3_add(game->camera.position, added_pos);
   game->camera.yaw += 180;
 
   fxaa_shader_init(&game->fxaa_shader, gpu_api);
 
-  struct TextureSettings texture1 = {"./assets/textures/fence.png", FILTER_NEAREST, MODE_CLAMP_TO_BORDER, 0};
+  struct TextureSettings texture1 = {"./assets/textures/fence.psd", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
   struct TextureSettings texture2 = {"./assets/textures/grass.png", FILTER_NEAREST, MODE_CLAMP_TO_BORDER, 0};
   struct TextureSettings texture3 = {"./assets/textures/clouds.png", FILTER_NEAREST, MODE_CLAMP_TO_BORDER, 0};
+  struct TextureSettings texture4 = {"./assets/textures/back2.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
+  struct TextureSettings texture5 = {"./assets/textures/trash.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
+  struct TextureSettings texture6 = {"./assets/textures/sign.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
 
   texture_cache_init(&game->texture_cache);
-  texture_cache_add(&game->texture_cache, gpu_api, 3, texture1, texture2, texture3);
+  texture_cache_add(&game->texture_cache, gpu_api, 6, texture1, texture2, texture3, texture4, texture5, texture6);
 
   sprite_shader_init(&game->sprite_shader, gpu_api);
 
   array_list_init(&game->sprites);
+
+  float draw_scale = 1.0f / 5.0f;
+
+  // Trash
+  struct Sprite* trash_sprite = malloc(sizeof(struct Sprite));
+  sprite_init(trash_sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/trash.png"));
+  trash_sprite->position = (vec3){.x = -1.35f, .y = -0.125f, .z = 0.0f};
+  trash_sprite->scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
+  array_list_add(&game->sprites, trash_sprite);
+
+  // Sign
+  struct Sprite* sign_sprite = malloc(sizeof(struct Sprite));
+  sprite_init(sign_sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/sign.png"));
+  sign_sprite->position = (vec3){.x = -2.3f, .y = 0.45f, .z = 0.0f};
+  sign_sprite->scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
+  array_list_add(&game->sprites, sign_sprite);
+
+  // Fence
   for (int loop_num = 0; loop_num < 10; loop_num++) {
     struct Sprite* sprite = malloc(sizeof(struct Sprite));
-    sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/fence.png"));
-    sprite->position = (vec3){.x = (loop_num * sprite->width) * 0.92f, .y = 0.0f, .z = loop_num * 0.000001f};
-    sprite->rotation = (quat){.data[0] = 0, .data[1] = 0, .data[2] = 0, .data[3] = 1.0f};
-    //sprite->rotation = (quat){.data[0] = loop_num / 3.0f, .data[1] = loop_num / 3.0f, .data[2] = loop_num / 3.0f, .data[3] = 1.0f};
+    sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/fence.psd"));
+    sprite->position = (vec3){.x = 10.0f - (loop_num * sprite->width) * 0.92f * draw_scale, .y = 0.525f, .z = loop_num * 0.000001f};
+    sprite->scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
     array_list_add(&game->sprites, sprite);
   }
 
+  // Grass
   for (int loop_num = 0; loop_num < 10; loop_num++) {
     struct Sprite* sprite = malloc(sizeof(struct Sprite));
     sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/grass.png"));
-    sprite->position = (vec3){.x = (loop_num * sprite->width) * 0.4f, .y = -sprite->height / 2.0, .z = 0.01 + (loop_num * 0.000001)};
-    sprite->rotation = (quat){.data[0] = 0, .data[1] = 0, .data[2] = 0, .data[3] = 1.0f};
-    //sprite->rotation = (quat){.data[0] = loop_num / 3.0f, .data[1] = loop_num / 3.0f, .data[2] = loop_num / 3.0f, .data[3] = 1.0f};
+    sprite->position = (vec3){.x = 10.0f - (loop_num * sprite->width) * 0.99f, .y = -sprite->height / 2.0, .z = 0.01 + (loop_num * 0.000001)};
     array_list_add(&game->sprites, sprite);
   }
 
+  // Background
+  struct Sprite* back_sprite = malloc(sizeof(struct Sprite));
+  sprite_init(back_sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/back2.png"));
+  float back_scale = 1.0f;
+  back_sprite->position = (vec3){.x = 0.0f, .y = 1.0f, .z = 5.0f};
+  back_sprite->scale = (vec3){.x = back_scale, .y = back_scale, .z = back_scale};
+  array_list_add(&game->sprites, back_sprite);
+
+  // Clouds
   for (int loop_num = 0; loop_num < 2; loop_num++) {
     struct Sprite* sprite = malloc(sizeof(struct Sprite));
+    float cloud_scale = 10.0f;
     sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/clouds.png"));
-    sprite->position = (vec3){.x = (loop_num * sprite->width) * 1.0f, .y = 0.0f, .z = 0.1 + (loop_num * 0.000001)};
-    sprite->rotation = (quat){.data[0] = 0, .data[1] = 0, .data[2] = 0, .data[3] = 1.0f};
-    //sprite->rotation = (quat){.data[0] = loop_num / 3.0f, .data[1] = loop_num / 3.0f, .data[2] = loop_num / 3.0f, .data[3] = 1.0f};
+    sprite->position = (vec3){.x = (loop_num * sprite->width) * 0.999f, .y = 0.0f, .z = 25.0f + (loop_num * 0.000001)};
+    sprite->scale = (vec3){.x = cloud_scale, .y = cloud_scale, .z = cloud_scale};
     array_list_add(&game->sprites, sprite);
   }
 }
@@ -88,8 +125,8 @@ void game_delete(struct Game* game, struct Mana* mana) {
 
   fxaa_shader_delete(&game->fxaa_shader, gpu_api);
 
-  audio_clip_delete(&game->music_clip);
-  audio_manager_delete(&game->audio_manager);
+  //audio_clip_delete(&game->music_clip);
+  //audio_manager_delete(&game->audio_manager);
 }
 
 void game_update(struct Game* game, struct Mana* mana, double delta_time) {
@@ -200,6 +237,12 @@ void game_update_camera(struct Game* game, struct Engine* engine) {
   game->camera.mouse_locked = mouse_locked;
 }
 
+static inline float camera_lerp(float start, float end, float t) {
+  //return start * (1.0f - t) + end * t;
+  return start + (end - start) * t;
+}
+float max_camera_velocity = 0.3f;
+float camera_velocity = 0.0f;
 void game_update_input(struct Game* game, struct Engine* engine) {
   int in_focus = glfwGetWindowAttrib(engine->graphics_library.glfw_library.glfw_window, GLFW_FOCUSED);
   if (in_focus == 0)
@@ -210,13 +253,17 @@ void game_update_input(struct Game* game, struct Engine* engine) {
   if (input_manager->keys[GLFW_KEY_ESCAPE].state == PRESSED)
     glfwSetWindowShouldClose(engine->graphics_library.glfw_library.glfw_window, 1);
 
+  int side_button_pressed = 0;
+
   float delta_time = 0.1f;
-  float movement_speed = 1.0f;
+  //float movement_speed = 1.0f;
+  //
+  //if (input_manager->keys[GLFW_KEY_LEFT_SHIFT].state == PRESSED)
+  //  movement_speed *= 5;
 
-  if (input_manager->keys[GLFW_KEY_LEFT_SHIFT].state == PRESSED)
-    movement_speed *= 5;
-
-  float velocity = movement_speed * delta_time;
+  //float velocity = camera_velocity + movement_speed * delta_time;
+  float velocity = camera_velocity * delta_time;
+  vec3 added_pos = vec3_scale(game->camera.right, velocity);
   if (input_manager->keys[GLFW_KEY_W].state == PRESSED) {
     vec3 added_pos = vec3_scale(game->camera.front, velocity);
     game->camera.position = vec3_add(game->camera.position, added_pos);
@@ -226,13 +273,17 @@ void game_update_input(struct Game* game, struct Engine* engine) {
     game->camera.position = vec3_sub(game->camera.position, added_pos);
   }
   if (input_manager->keys[GLFW_KEY_A].state == PRESSED) {
-    vec3 added_pos = vec3_scale(game->camera.right, velocity);
-    game->camera.position = vec3_sub(game->camera.position, added_pos);
+    side_button_pressed++;
+    if (camera_velocity < max_camera_velocity)
+      camera_velocity += 0.005f;
   }
   if (input_manager->keys[GLFW_KEY_D].state == PRESSED) {
-    vec3 added_pos = vec3_scale(game->camera.right, velocity);
-    game->camera.position = vec3_add(game->camera.position, added_pos);
+    side_button_pressed++;
+    if (camera_velocity > -max_camera_velocity)
+      camera_velocity -= 0.005f;
   }
+  game->camera.position = vec3_sub(game->camera.position, added_pos);
+
   if (input_manager->keys[GLFW_KEY_E].state == PRESSED) {
     vec3 added_pos = vec3_scale(game->camera.up, velocity);
     game->camera.position = vec3_add(game->camera.position, added_pos);
@@ -241,19 +292,17 @@ void game_update_input(struct Game* game, struct Engine* engine) {
     vec3 added_pos = vec3_scale(game->camera.up, velocity);
     game->camera.position = vec3_sub(game->camera.position, added_pos);
   }
-  if (input_manager->keys[GLFW_KEY_Z].state == PRESSED)
-    game->camera.roll -= 1.0f;
-
-  //game->camera.orientation = quaternion_mul(game->camera.orientation, (quat){.x = 0.0f, .y = 0.0f, .z = 0.05f, .w = 1.0f});
-  if (input_manager->keys[GLFW_KEY_X].state == PRESSED)
-    game->camera.roll += 1.0f;
-
-  //game->camera.orientation = quaternion_mul(game->camera.orientation, (quat){.x = 0.0f, .y = 0.0f, .z = -0.05f, .w = 1.0f});
 
   if (input_manager->keys[GLFW_KEY_1].pushed == 1) {
     game->fxaa_on ^= 1;
     game->fxaa_on ? printf("FXAA ON\n") : printf("FXAA OFF\n");
   }
+
+  if (input_manager->keys[GLFW_KEY_2].pushed == 1)
+    audio_manager_play_audio_clip(game->audio_manager, game->fart_clip);
+
+  if (side_button_pressed == 0)
+    camera_velocity *= 0.98f;
 
   if (glfwJoystickIsGamepad(GLFW_JOYSTICK_1)) {
     GLFWgamepadstate state;
