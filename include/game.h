@@ -14,11 +14,18 @@
 #include <mana/graphics/shaders/manifolddualcontouringshader.h>
 #include <mana/graphics/shaders/modelshader.h>
 #include <mana/graphics/shaders/modelstaticshader.h>
+#include <mana/graphics/shaders/spriteanimationshader.h>
 #include <mana/graphics/shaders/spriteshader.h>
 #include <mana/graphics/utilities/camera.h>
 #include <mana/graphics/utilities/modelcache.h>
+#include <mana/graphics/utilities/spriteanimation.h>
 #include <mana/graphics/utilities/texturecache.h>
 #include <mana/mana.h>
+
+enum CharacterState {
+  CHARACTER_IDLE_STATE = 0,
+  CHARACTER_WALKING_STATE
+};
 
 struct Game {
   struct Window* window;
@@ -32,12 +39,19 @@ struct Game {
 
   struct TextureCache texture_cache;
   struct SpriteShader sprite_shader;
+  struct SpriteAnimationShader sprite_animation_shader;
   struct FXAAShader fxaa_shader;
   int fxaa_on;
 
   struct Sprite* hud_sprite;
+  struct SpriteAnimation* walking_animation;
 
   struct ArrayList sprites;
+  struct ArrayList animated_sprites;
+
+  int character_direction;
+  enum CharacterState character_state;
+  vec2 character_position;
 };
 
 void game_init(struct Game* game, struct Mana* mana, struct Window* window);

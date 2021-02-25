@@ -43,8 +43,10 @@ if(UNIX AND NOT APPLE)
         endif()
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-visibility -Wno-pragma-pack -Wno-deprecated-declarations -mavx -mavx2")
-
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-visibility -Wno-pragma-pack -Wno-deprecated-declarations -mavx -mavx2")
+# Compile with up to sse2
+add_definitions(-DSIMD_SSE2=1)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-visibility -Wno-pragma-pack -Wno-deprecated-declarations -msse2")
 
 #if(CMAKE_BUILD_TYPE MATCHES Debug)
 #        message("Debug build.")

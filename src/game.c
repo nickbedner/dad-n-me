@@ -1,7 +1,7 @@
 #include "game.h"
 
 int split_thread(void* aArg) {
-  printf("Staring audio thread!\n");
+  printf("Starting audio thread!\n");
   audio_manager_start((struct AudioManager*)aArg);
 
   return 0;
@@ -40,6 +40,8 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   game->camera.yaw += 180;
 
   fxaa_shader_init(&game->fxaa_shader, gpu_api);
+  sprite_shader_init(&game->sprite_shader, gpu_api);
+  sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api);
 
   struct TextureSettings texture1 = {"./assets/textures/fence.psd", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
   struct TextureSettings texture2 = {"./assets/textures/grass.png", FILTER_NEAREST, MODE_CLAMP_TO_BORDER, 0};   // 0
@@ -54,19 +56,21 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   struct TextureSettings texture11 = {"./assets/textures/sign2.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
   struct TextureSettings texture12 = {"./assets/textures/hud.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
   struct TextureSettings texture13 = {"./assets/textures/sandbox.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
+  struct TextureSettings texture14 = {"./assets/textures/walkingspritesheet.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
+  struct TextureSettings texture15 = {"./assets/textures/standingspritesheet.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
 
   texture_cache_init(&game->texture_cache);
-  texture_cache_add(&game->texture_cache, gpu_api, 13, texture1, texture2, texture3, texture4, texture5, texture6, texture7, texture8, texture9, texture10, texture11, texture12, texture13);
-
-  sprite_shader_init(&game->sprite_shader, gpu_api);
+  texture_cache_add(&game->texture_cache, gpu_api, 14, texture1, texture2, texture3, texture4, texture5, texture6, texture7, texture8, texture9, texture10, texture11, texture12, texture13, texture14);
+  texture_cache_add(&game->texture_cache, gpu_api, 1, texture15);
 
   array_list_init(&game->sprites);
+  array_list_init(&game->animated_sprites);
 
   float draw_scale = 1.0f / 5.0f;
 
   // Draw sprites from front to back for transparencies
   // HUD
-  game->hud_sprite = malloc(sizeof(struct Sprite));
+  game->hud_sprite = calloc(1, sizeof(struct Sprite));
   float cloud_scale = 10.0f * draw_scale;
   sprite_init(game->hud_sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/hud.png"));
   //sprite->position = (vec3){.x = (loop_num * sprite->width) * 0.999f * draw_scale, .y = 10.0f, .z = 50.0f + (loop_num * 0.000001)};
@@ -75,26 +79,26 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   array_list_add(&game->sprites, game->hud_sprite);
 
   // Sandbox
-  struct Sprite* sandbox_sprite = malloc(sizeof(struct Sprite));
+  struct Sprite* sandbox_sprite = calloc(1, sizeof(struct Sprite));
   sprite_init(sandbox_sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/sandbox.png"));
   sandbox_sprite->position = (vec3){.x = -3.8f, .y = -1.5f, .z = 0.0f};
   sandbox_sprite->scale = (vec3){.x = draw_scale * 1.5, .y = draw_scale * 1.5, .z = draw_scale * 1.5};
   array_list_add(&game->sprites, sandbox_sprite);
 
   // Trash
-  struct Sprite* trash_sprite = malloc(sizeof(struct Sprite));
+  struct Sprite* trash_sprite = calloc(1, sizeof(struct Sprite));
   sprite_init(trash_sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/trash.png"));
   trash_sprite->position = (vec3){.x = -1.35f, .y = -0.125f, .z = 0.0f};
   trash_sprite->scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
   array_list_add(&game->sprites, trash_sprite);
-  struct Sprite* trash_sprite2 = malloc(sizeof(struct Sprite));
+  struct Sprite* trash_sprite2 = calloc(1, sizeof(struct Sprite));
   sprite_init(trash_sprite2, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/trash2.png"));
   trash_sprite2->position = (vec3){.x = -3.8f, .y = -0.125f, .z = 0.0f};
   trash_sprite2->scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
   array_list_add(&game->sprites, trash_sprite2);
 
   // Sign
-  struct Sprite* sign_sprite = malloc(sizeof(struct Sprite));
+  struct Sprite* sign_sprite = calloc(1, sizeof(struct Sprite));
   sprite_init(sign_sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/sign.png"));
   sign_sprite->position = (vec3){.x = -2.3f, .y = 0.45f, .z = 0.0f};
   sign_sprite->scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
@@ -102,7 +106,7 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
 
   // Fence
   for (int loop_num = 0; loop_num < 10; loop_num++) {
-    struct Sprite* sprite = malloc(sizeof(struct Sprite));
+    struct Sprite* sprite = calloc(1, sizeof(struct Sprite));
     sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/fence.psd"));
     sprite->position = (vec3){.x = 10.0f - (loop_num * sprite->width) * 0.92f * draw_scale, .y = 0.525f, .z = loop_num * 0.000001f};
     sprite->scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
@@ -112,13 +116,13 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   // Grass
   for (int loop_num = 0; loop_num < 25; loop_num++) {
     if (loop_num <= 7) {
-      struct Sprite* sprite = malloc(sizeof(struct Sprite));
+      struct Sprite* sprite = calloc(1, sizeof(struct Sprite));
       sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/grass.png"));
       sprite->position = (vec3){.x = 14.0f - (loop_num * sprite->width) * 0.98f * draw_scale, .y = -1.675, .z = 0.01 + (loop_num * 0.000001)};
       sprite->scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
       array_list_add(&game->sprites, sprite);
     } else {
-      struct Sprite* sprite = malloc(sizeof(struct Sprite));
+      struct Sprite* sprite = calloc(1, sizeof(struct Sprite));
       sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/grassshadow.png"));
       sprite->position = (vec3){.x = 14.0f - (loop_num * sprite->width) * 0.98f * draw_scale, .y = -1.675, .z = 0.01 + (loop_num * 0.000001)};
       sprite->scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
@@ -128,7 +132,7 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
 
   // Wood Fence
   for (int loop_num = 0; loop_num < 20; loop_num++) {
-    struct Sprite* sprite = malloc(sizeof(struct Sprite));
+    struct Sprite* sprite = calloc(1, sizeof(struct Sprite));
     sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/woodfence.png"));
     sprite->position = (vec3){.x = -4.37125f - (loop_num * sprite->width) * 0.92f * draw_scale, .y = 0.825f, .z = 0.011f + loop_num * 0.000001f};
     sprite->scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
@@ -136,14 +140,14 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   }
 
   // Sign 2
-  struct Sprite* sign_sprite2 = malloc(sizeof(struct Sprite));
+  struct Sprite* sign_sprite2 = calloc(1, sizeof(struct Sprite));
   sprite_init(sign_sprite2, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/sign2.png"));
   sign_sprite2->position = (vec3){.x = 0.15f, .y = 1.1f, .z = 0.0111f};
   sign_sprite2->scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
   array_list_add(&game->sprites, sign_sprite2);
 
   // Background
-  struct Sprite* back_sprite = malloc(sizeof(struct Sprite));
+  struct Sprite* back_sprite = calloc(1, sizeof(struct Sprite));
   sprite_init(back_sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/back2.png"));
   back_sprite->position = (vec3){.x = 1.0f, .y = 1.1f, .z = 7.0f};
   back_sprite->scale = (vec3){.x = draw_scale * 2, .y = draw_scale * 2, .z = draw_scale * 2};
@@ -151,13 +155,32 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
 
   // Clouds
   for (int loop_num = 0; loop_num < 2; loop_num++) {
-    struct Sprite* sprite = malloc(sizeof(struct Sprite));
+    struct Sprite* sprite = calloc(1, sizeof(struct Sprite));
     float cloud_scale = 10.0f * draw_scale;
     sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/clouds.png"));
     sprite->position = (vec3){.x = (loop_num * sprite->width) * 0.999f * draw_scale, .y = 10.0f, .z = 50.0f + (loop_num * 0.000001)};
     sprite->scale = (vec3){.x = cloud_scale, .y = cloud_scale, .z = cloud_scale};
     array_list_add(&game->sprites, sprite);
   }
+
+  // Animations
+  // Standing animation
+  struct SpriteAnimation* standing_animation = calloc(1, sizeof(struct SpriteAnimation));
+  sprite_animation_init(standing_animation, gpu_api, &game->sprite_animation_shader, texture_cache_get(&game->texture_cache, "./assets/textures/standingspritesheet.png"), 4, 1.0f / 10.0f, 0);
+  standing_animation->position = (vec3){.x = 0.0f * draw_scale, .y = 0.0f, .z = 0.0f};
+  standing_animation->scale = (vec3){.x = 1.0f * draw_scale, .y = 1.0f * draw_scale, .z = 1.0f * draw_scale};
+  array_list_add(&game->animated_sprites, standing_animation);
+
+  // Walking animation
+  struct SpriteAnimation* walking_animation = calloc(1, sizeof(struct SpriteAnimation));
+  sprite_animation_init(walking_animation, gpu_api, &game->sprite_animation_shader, texture_cache_get(&game->texture_cache, "./assets/textures/walkingspritesheet.png"), 11, 1.0f / 30.0f, 0);
+  walking_animation->position = (vec3){.x = 0.0f * draw_scale, .y = 0.0f, .z = 0.0f};
+  walking_animation->scale = (vec3){.x = 1.0f * draw_scale, .y = 1.0f * draw_scale, .z = 1.0f * draw_scale};
+  array_list_add(&game->animated_sprites, walking_animation);
+
+  game->character_state = CHARACTER_IDLE_STATE;
+  game->character_position = VEC2_ZERO;
+  game->character_direction = 1;
 }
 
 void game_delete(struct Game* game, struct Mana* mana) {
@@ -173,7 +196,15 @@ void game_delete(struct Game* game, struct Mana* mana) {
     free(sprite);
   }
 
+  for (int sprite_animation_num = 0; sprite_animation_num < array_list_size(&game->animated_sprites); sprite_animation_num++) {
+    struct SpriteAnimation* sprite_animation = array_list_get(&game->animated_sprites, sprite_animation_num);
+    sprite_animation_delete(sprite_animation, gpu_api);
+    free(sprite_animation);
+  }
+
   array_list_delete(&game->sprites);
+  array_list_delete(&game->animated_sprites);
+  sprite_animation_shader_delete(&game->sprite_animation_shader, gpu_api);
   sprite_shader_delete(&game->sprite_shader, gpu_api);
 
   fxaa_shader_delete(&game->fxaa_shader, gpu_api);
@@ -207,6 +238,11 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
       struct Sprite* sprite = array_list_get(&game->sprites, sprite_num);
       sprite_recreate(sprite, gpu_api);
     }
+
+    for (int sprite_animation_num = 0; sprite_animation_num < array_list_size(&game->animated_sprites); sprite_animation_num++) {
+      struct SpriteAnimation* sprite_animation = array_list_get(&game->animated_sprites, sprite_animation_num);
+      sprite_animation_recreate(sprite_animation, gpu_api);
+    }
   }
 
   game_update_input(game, &mana->engine);
@@ -220,6 +256,21 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
   gbuffer_start(gpu_api->vulkan_state->gbuffer, gpu_api->vulkan_state);
   for (int sprite_num = array_list_size(&game->sprites) - 1; sprite_num >= 0; sprite_num--)
     sprite_render(array_list_get(&game->sprites, sprite_num), gpu_api, delta_time);
+
+  for (int sprite_animation_num = array_list_size(&game->animated_sprites) - 1; sprite_animation_num >= 0; sprite_animation_num--) {
+    struct SpriteAnimation* sprite_animation = array_list_get(&game->animated_sprites, sprite_animation_num);
+    sprite_animation->direction = game->character_direction;
+    sprite_animation_update(sprite_animation, delta_time);
+    sprite_animation->position.x = game->character_position.x;
+    sprite_animation->position.y = game->character_position.y;
+    if (game->character_state == sprite_animation_num)
+      sprite_animation_render(sprite_animation, gpu_api, delta_time);
+  }
+  //switch (game->character_state) {
+  //  case (IDLE_STATE):
+  //    sprite_animation_render(array_list_get(&game->animated_sprites, 0), gpu_api, delta_time);
+  //    break;
+  //}
   gbuffer_stop(gpu_api->vulkan_state->gbuffer, gpu_api->vulkan_state);
   blit_post_process_render(gpu_api->vulkan_state->post_process->blit_post_process, gpu_api);
 
@@ -267,7 +318,7 @@ void game_update_camera(struct Game* game, struct Engine* engine) {
   //game->camera.yaw -= x_diff;
   //game->camera.pitch += y_diff;
 
-  if (glfwJoystickIsGamepad(GLFW_JOYSTICK_1)) {
+  /*if (glfwJoystickIsGamepad(GLFW_JOYSTICK_1)) {
     GLFWgamepadstate state;
     if (glfwGetGamepadState(GLFW_JOYSTICK_1, &state)) {
       float right_x_axis = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X] * game->camera.sensitivity * 15;
@@ -285,7 +336,7 @@ void game_update_camera(struct Game* game, struct Engine* engine) {
       game->camera.yaw += right_x_axis;
       game->camera.pitch -= right_y_axis;
     }
-  }
+  }*/
 
   if (game->camera.pitch > 89.0f)
     game->camera.pitch = 89.0f;
@@ -299,7 +350,7 @@ static inline float camera_lerp(float start, float end, float t) {
   //return start * (1.0f - t) + end * t;
   return start + (end - start) * t;
 }
-float max_camera_velocity = 0.5f;
+float max_camera_velocity = 0.25f;
 float camera_left_right_velocity = 0.0f;
 float camera_in_out_velocity = 0.0f;
 float camera_up_down_velocity = 0.0f;
@@ -316,6 +367,8 @@ void game_update_input(struct Game* game, struct Engine* engine) {
   int side_button_pressed = 0;
   int up_button_pressed = 0;
 
+  game->character_state = CHARACTER_IDLE_STATE;
+
   float delta_time = 0.1f;
   //float movement_speed = 1.0f;
   //
@@ -327,14 +380,29 @@ void game_update_input(struct Game* game, struct Engine* engine) {
   float left_right_velocity = camera_left_right_velocity * delta_time;
   vec3 added_pos = vec3_scale(game->camera.right, left_right_velocity);
   if (input_manager->keys[GLFW_KEY_A].state == PRESSED) {
-    side_button_pressed++;
-    if (camera_left_right_velocity < max_camera_velocity)
-      camera_left_right_velocity -= 0.005f;
+    game->character_state = CHARACTER_WALKING_STATE;
+    game->character_direction = -1;
+    game->character_position.x += 0.025f;
+    //if (camera_left_right_velocity < max_camera_velocity)
+    //  camera_left_right_velocity -= 0.005f;
   }
   if (input_manager->keys[GLFW_KEY_D].state == PRESSED) {
+    game->character_state = CHARACTER_WALKING_STATE;
     side_button_pressed++;
-    if (camera_left_right_velocity > -max_camera_velocity)
-      camera_left_right_velocity += 0.005f;
+    game->character_direction = 1;
+    game->character_position.x -= 0.025f;
+    //if (camera_left_right_velocity > -max_camera_velocity)
+    //  camera_left_right_velocity += 0.005f;
+  }
+  int direction = (game->camera.position.x > game->character_position.x) ? 0 : 1;
+  if (fabs(camera_left_right_velocity) < max_camera_velocity) {
+    if (fabs(game->camera.position.x - game->character_position.x) > 0.25f) {
+      camera_left_right_velocity += (game->camera.position.x - game->character_position.x) * 0.01f;
+      //if (direction)
+      //  camera_left_right_velocity -= 0.005f;
+      //else
+      //  camera_left_right_velocity += 0.005f;
+    }
   }
   game->camera.position = vec3_add(game->camera.position, added_pos);
 
@@ -342,14 +410,18 @@ void game_update_input(struct Game* game, struct Engine* engine) {
   float in_out_velocity = camera_in_out_velocity * delta_time;
   added_pos = vec3_scale(game->camera.front, in_out_velocity);
   if (input_manager->keys[GLFW_KEY_W].state == PRESSED) {
+    game->character_state = CHARACTER_WALKING_STATE;
     up_button_pressed++;
-    if (camera_in_out_velocity < max_camera_velocity)
-      camera_in_out_velocity += 0.005f;
+    game->character_position.y += 0.015f;
+    //if (camera_in_out_velocity < max_camera_velocity)
+    //  camera_in_out_velocity += 0.005f;
   }
   if (input_manager->keys[GLFW_KEY_S].state == PRESSED) {
+    game->character_state = CHARACTER_WALKING_STATE;
     up_button_pressed++;
-    if (camera_in_out_velocity < max_camera_velocity)
-      camera_in_out_velocity -= 0.005f;
+    game->character_position.y -= 0.015f;
+    //if (camera_in_out_velocity < max_camera_velocity)
+    //  camera_in_out_velocity -= 0.005f;
   }
   game->camera.position = vec3_add(game->camera.position, added_pos);
 
@@ -373,11 +445,19 @@ void game_update_input(struct Game* game, struct Engine* engine) {
   if (input_manager->keys[GLFW_KEY_2].pushed == 1)
     audio_manager_play_audio_clip(game->audio_manager, game->fart_clip);
 
+  if (input_manager->keys[GLFW_KEY_O].pushed == 1) {
+    game->fxaa_on ^= 1;
+    game->fxaa_on ? printf("FXAA ON\n") : printf("FXAA OFF\n");
+  }
+  if (input_manager->keys[GLFW_KEY_P].pushed == 1) {
+    game->fxaa_on ^= 1;
+    game->fxaa_on ? printf("FXAA ON\n") : printf("FXAA OFF\n");
+  }
   //if (side_button_pressed == 0)
-  camera_left_right_velocity *= 0.98f;
+  camera_left_right_velocity *= 0.95f;
   //if (up_button_pressed == 0)
-  camera_in_out_velocity *= 0.98f;
-  camera_up_down_velocity *= 0.98f;
+  camera_in_out_velocity *= 0.95f;
+  camera_up_down_velocity *= 0.95f;
 
   /*if (glfwJoystickIsGamepad(GLFW_JOYSTICK_1)) {
     GLFWgamepadstate state;
@@ -413,5 +493,10 @@ void game_update_uniform_buffers(struct Game* game, struct Engine* engine) {
   for (int entity_num = 0; entity_num < array_list_size(&game->sprites); entity_num++) {
     struct Sprite* sprite = (struct Sprite*)array_list_get(&game->sprites, entity_num);
     sprite_update_uniforms(sprite, &engine->gpu_api);
+  }
+
+  for (int sprite_animation_num = 0; sprite_animation_num < array_list_size(&game->animated_sprites); sprite_animation_num++) {
+    struct SpriteAnimation* sprite_animation = array_list_get(&game->animated_sprites, sprite_animation_num);
+    sprite_animation_update_uniforms(sprite_animation, &engine->gpu_api);
   }
 }
