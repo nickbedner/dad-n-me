@@ -27,6 +27,12 @@ enum CharacterState {
   CHARACTER_WALKING_STATE
 };
 
+enum SandcastleState {
+  SANDCASTLE_FULL_STATE = 0,
+  SANDCASTLE_ANIMATING_STATE,
+  SANDCASTLE_CRUSHED_STATE
+};
+
 struct Game {
   struct Window* window;
   struct Camera camera;
@@ -52,6 +58,11 @@ struct Game {
   int character_direction;
   enum CharacterState character_state;
   vec2 character_position;
+
+  enum SandcastleState sandcastle_state;
+  struct Sprite* sandcastle;
+  struct SpriteAnimation* sandcastle_animation;
+  vec3 sandcastle_position;
 };
 
 void game_init(struct Game* game, struct Mana* mana, struct Window* window);

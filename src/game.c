@@ -58,10 +58,12 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   struct TextureSettings texture13 = {"./assets/textures/sandbox.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
   struct TextureSettings texture14 = {"./assets/textures/walkingspritesheet.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
   struct TextureSettings texture15 = {"./assets/textures/standingspritesheet.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
+  struct TextureSettings texture16 = {"./assets/textures/sandcastle.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 0};
+  struct TextureSettings texture17 = {"./assets/textures/sandcastlespritesheet.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 0};
 
   texture_cache_init(&game->texture_cache);
   texture_cache_add(&game->texture_cache, gpu_api, 14, texture1, texture2, texture3, texture4, texture5, texture6, texture7, texture8, texture9, texture10, texture11, texture12, texture13, texture14);
-  texture_cache_add(&game->texture_cache, gpu_api, 1, texture15);
+  texture_cache_add(&game->texture_cache, gpu_api, 3, texture15, texture16, texture17);
 
   array_list_init(&game->sprites);
   array_list_init(&game->animated_sprites);
@@ -71,18 +73,25 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   // Draw sprites from front to back for transparencies
   // HUD
   game->hud_sprite = calloc(1, sizeof(struct Sprite));
-  float cloud_scale = 10.0f * draw_scale;
   sprite_init(game->hud_sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/hud.png"));
   //sprite->position = (vec3){.x = (loop_num * sprite->width) * 0.999f * draw_scale, .y = 10.0f, .z = 50.0f + (loop_num * 0.000001)};
   game->hud_sprite->position = (vec3){.x = game->camera.position.x, .y = game->camera.position.y, .z = -0.1f};
   game->hud_sprite->scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
   array_list_add(&game->sprites, game->hud_sprite);
 
+  // Sandcastle
+  float sand_castle_size = draw_scale * 0.85f;
+  game->sandcastle_position = (vec3){.x = -3.333f, .y = -1.4f, .z = -0.001f};
+  game->sandcastle = calloc(1, sizeof(struct Sprite));
+  sprite_init(game->sandcastle, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/sandcastle.png"));
+  game->sandcastle->position = game->sandcastle_position;
+  game->sandcastle->scale = (vec3){.x = sand_castle_size, .y = sand_castle_size, .z = sand_castle_size};
+
   // Sandbox
   struct Sprite* sandbox_sprite = calloc(1, sizeof(struct Sprite));
   sprite_init(sandbox_sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/sandbox.png"));
   sandbox_sprite->position = (vec3){.x = -3.8f, .y = -1.5f, .z = 0.0f};
-  sandbox_sprite->scale = (vec3){.x = draw_scale * 1.5, .y = draw_scale * 1.5, .z = draw_scale * 1.5};
+  sandbox_sprite->scale = (vec3){.x = draw_scale * 1.75, .y = draw_scale * 1.75, .z = draw_scale * 1.75};
   array_list_add(&game->sprites, sandbox_sprite);
 
   // Trash
@@ -154,6 +163,7 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   array_list_add(&game->sprites, back_sprite);
 
   // Clouds
+  float cloud_scale = 10.0f * draw_scale;
   for (int loop_num = 0; loop_num < 2; loop_num++) {
     struct Sprite* sprite = calloc(1, sizeof(struct Sprite));
     float cloud_scale = 10.0f * draw_scale;
@@ -167,20 +177,28 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   // Standing animation
   struct SpriteAnimation* standing_animation = calloc(1, sizeof(struct SpriteAnimation));
   sprite_animation_init(standing_animation, gpu_api, &game->sprite_animation_shader, texture_cache_get(&game->texture_cache, "./assets/textures/standingspritesheet.png"), 4, 1.0f / 10.0f, 0);
-  standing_animation->position = (vec3){.x = 0.0f * draw_scale, .y = 0.0f, .z = 0.0f};
+  standing_animation->position = (vec3){.x = 0.0f * draw_scale, .y = 0.0f, .z = -0.01f};
   standing_animation->scale = (vec3){.x = 1.0f * draw_scale, .y = 1.0f * draw_scale, .z = 1.0f * draw_scale};
   array_list_add(&game->animated_sprites, standing_animation);
 
   // Walking animation
   struct SpriteAnimation* walking_animation = calloc(1, sizeof(struct SpriteAnimation));
   sprite_animation_init(walking_animation, gpu_api, &game->sprite_animation_shader, texture_cache_get(&game->texture_cache, "./assets/textures/walkingspritesheet.png"), 11, 1.0f / 30.0f, 0);
-  walking_animation->position = (vec3){.x = 0.0f * draw_scale, .y = 0.0f, .z = 0.0f};
+  walking_animation->position = (vec3){.x = 0.0f * draw_scale, .y = 0.0f, .z = -0.01f};
   walking_animation->scale = (vec3){.x = 1.0f * draw_scale, .y = 1.0f * draw_scale, .z = 1.0f * draw_scale};
   array_list_add(&game->animated_sprites, walking_animation);
+
+  // Sandcastle animation
+  game->sandcastle_animation = calloc(1, sizeof(struct SpriteAnimation));
+  sprite_animation_init(game->sandcastle_animation, gpu_api, &game->sprite_animation_shader, texture_cache_get(&game->texture_cache, "./assets/textures/sandcastlespritesheet.png"), 13, 1.0f / 30.0f, 0);
+  game->sandcastle_animation->position = game->sandcastle_position;
+  game->sandcastle_animation->scale = (vec3){.x = sand_castle_size, .y = sand_castle_size, .z = sand_castle_size};
 
   game->character_state = CHARACTER_IDLE_STATE;
   game->character_position = VEC2_ZERO;
   game->character_direction = 1;
+
+  game->sandcastle_state = SANDCASTLE_FULL_STATE;
 }
 
 void game_delete(struct Game* game, struct Mana* mana) {
@@ -257,6 +275,24 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
   for (int sprite_num = array_list_size(&game->sprites) - 1; sprite_num >= 0; sprite_num--)
     sprite_render(array_list_get(&game->sprites, sprite_num), gpu_api, delta_time);
 
+  switch (game->sandcastle_state) {
+    case (SANDCASTLE_FULL_STATE):
+      if (fabs((game->sandcastle_position.x - game->character_position.x + 0.25f) / 2.0f) + fabs(game->sandcastle_position.y - game->character_position.y + 0.5f) < 0.35f) {
+        game->sandcastle_state = SANDCASTLE_ANIMATING_STATE;
+        game->sandcastle_animation->loop = 0;
+        audio_manager_play_audio_clip(game->audio_manager, game->fart_clip);
+      }
+      sprite_render(game->sandcastle, gpu_api, delta_time);
+      break;
+    case (SANDCASTLE_ANIMATING_STATE):
+      sprite_animation_update(game->sandcastle_animation, delta_time);
+      if (game->sandcastle_animation->current_frame == game->sandcastle_animation->total_frames)
+        game->sandcastle_state = SANDCASTLE_CRUSHED_STATE;
+    case (SANDCASTLE_CRUSHED_STATE):
+      sprite_animation_render(game->sandcastle_animation, gpu_api, delta_time);
+      break;
+  }
+
   for (int sprite_animation_num = array_list_size(&game->animated_sprites) - 1; sprite_animation_num >= 0; sprite_animation_num--) {
     struct SpriteAnimation* sprite_animation = array_list_get(&game->animated_sprites, sprite_animation_num);
     sprite_animation->direction = game->character_direction;
@@ -266,6 +302,7 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
     if (game->character_state == sprite_animation_num)
       sprite_animation_render(sprite_animation, gpu_api, delta_time);
   }
+
   //switch (game->character_state) {
   //  case (IDLE_STATE):
   //    sprite_animation_render(array_list_get(&game->animated_sprites, 0), gpu_api, delta_time);
@@ -446,12 +483,14 @@ void game_update_input(struct Game* game, struct Engine* engine) {
     audio_manager_play_audio_clip(game->audio_manager, game->fart_clip);
 
   if (input_manager->keys[GLFW_KEY_O].pushed == 1) {
-    game->fxaa_on ^= 1;
-    game->fxaa_on ? printf("FXAA ON\n") : printf("FXAA OFF\n");
+    game->audio_manager->master_volume -= 0.1f;
+    if (game->audio_manager->master_volume < 0.0f)
+      game->audio_manager->master_volume = 0.0f;
   }
   if (input_manager->keys[GLFW_KEY_P].pushed == 1) {
-    game->fxaa_on ^= 1;
-    game->fxaa_on ? printf("FXAA ON\n") : printf("FXAA OFF\n");
+    game->audio_manager->master_volume += 0.1f;
+    if (game->audio_manager->master_volume > 1.0f)
+      game->audio_manager->master_volume = 1.0f;
   }
   //if (side_button_pressed == 0)
   camera_left_right_velocity *= 0.95f;
@@ -495,8 +534,12 @@ void game_update_uniform_buffers(struct Game* game, struct Engine* engine) {
     sprite_update_uniforms(sprite, &engine->gpu_api);
   }
 
+  sprite_update_uniforms(game->sandcastle, &engine->gpu_api);
+
   for (int sprite_animation_num = 0; sprite_animation_num < array_list_size(&game->animated_sprites); sprite_animation_num++) {
     struct SpriteAnimation* sprite_animation = array_list_get(&game->animated_sprites, sprite_animation_num);
     sprite_animation_update_uniforms(sprite_animation, &engine->gpu_api);
   }
+
+  sprite_animation_update_uniforms(game->sandcastle_animation, &engine->gpu_api);
 }
