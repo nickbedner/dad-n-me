@@ -55,9 +55,10 @@ struct Game {
   struct ArrayList sprites;
   struct ArrayList animated_sprites;
 
-  int character_direction;
+  float character_direction;
   enum CharacterState character_state;
   vec2 character_position;
+  struct Sprite* character_shadow;
 
   enum SandcastleState sandcastle_state;
   struct Sprite* sandcastle;
