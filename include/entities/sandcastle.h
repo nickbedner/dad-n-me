@@ -1,0 +1,34 @@
+#pragma once
+#ifndef SANDCASTLE_H
+#define SANDCASTLE_H
+
+#include <mana/core/memoryallocator.h>
+//
+#include <mana/graphics/shaders/spriteanimationshader.h>
+#include <mana/graphics/utilities/spriteanimation.h>
+#include <mana/mana.h>
+
+#include "game.h"
+enum SandcastleState {
+  SANDCASTLE_FULL_STATE = 0,
+  SANDCASTLE_ANIMATING_STATE,
+  SANDCASTLE_CRUSHED_STATE
+};
+
+struct Sandcastle {
+  enum SandcastleState sandcastle_state;
+  struct Sprite* sandcastle;
+  struct SpriteAnimation* sandcastle_animation;
+  vec3 sandcastle_position;
+
+  struct AudioClip fart_clip;
+};
+
+int sandcastle_init(struct Sandcastle* sandcastle, struct GPUAPI* gpu_api, struct Game* game);
+void sandcastle_delete(struct Sandcastle* sandcastle, struct GPUAPI* gpu_api);
+void sandcastle_update(struct Sandcastle* sandcastle, struct Game* game, float delta_time);
+void sandcastle_render(struct Sandcastle* sandcastle, struct GPUAPI* gpu_api);
+void sandcastle_update_uniforms(struct Sandcastle* sandcastle, struct GPUAPI* gpu_api);
+void sandcastle_recreate(struct Sandcastle* sandcastle, struct GPUAPI* gpu_api);
+
+#endif  // SANDCASTLE_H

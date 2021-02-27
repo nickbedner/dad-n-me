@@ -22,32 +22,22 @@
 #include <mana/graphics/utilities/texturecache.h>
 #include <mana/mana.h>
 
-enum CharacterState {
-  CHARACTER_IDLE_STATE = 0,
-  CHARACTER_WALKING_STATE
-};
-
-enum SandcastleState {
-  SANDCASTLE_FULL_STATE = 0,
-  SANDCASTLE_ANIMATING_STATE,
-  SANDCASTLE_CRUSHED_STATE
-};
+#include "entities/player.h"
+#include "entities/sandcastle.h"
+#include "utilities/playercamera.h"
 
 struct Game {
   struct Window* window;
-  struct Camera camera;
 
-  struct AudioManager* audio_manager;
+  struct AudioManager audio_manager;
   struct AudioClipCache* music_clip_cache;
   struct AudioClipCache* fart_clip_cache;
   struct AudioClip* music_clip;
-  struct AudioClip* fart_clip;
 
   struct TextureCache texture_cache;
   struct SpriteShader sprite_shader;
   struct SpriteAnimationShader sprite_animation_shader;
   struct FXAAShader fxaa_shader;
-  int fxaa_on;
 
   struct Sprite* hud_sprite;
   struct SpriteAnimation* walking_animation;
@@ -55,15 +45,9 @@ struct Game {
   struct ArrayList sprites;
   struct ArrayList animated_sprites;
 
-  float character_direction;
-  enum CharacterState character_state;
-  vec2 character_position;
-  struct Sprite* character_shadow;
-
-  enum SandcastleState sandcastle_state;
-  struct Sprite* sandcastle;
-  struct SpriteAnimation* sandcastle_animation;
-  vec3 sandcastle_position;
+  struct PlayerCamera player_camera;
+  struct Player* player;
+  struct Sandcastle* sandcastle;
 };
 
 void game_init(struct Game* game, struct Mana* mana, struct Window* window);
@@ -71,6 +55,5 @@ void game_delete(struct Game* game, struct Mana* mana);
 void game_update(struct Game* game, struct Mana* mana, double delta_time);
 void game_update_camera(struct Game* game, struct Engine* engine);
 void game_update_input(struct Game* game, struct Engine* engine);
-void game_update_uniform_buffers(struct Game* game, struct Engine* engine);
 
 #endif  //GAME_H
