@@ -5,8 +5,8 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   game->window = window;
 
   fxaa_shader_init(&game->fxaa_shader, gpu_api);
-  sprite_shader_init(&game->sprite_shader, gpu_api);
-  sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api);
+  sprite_shader_init(&game->sprite_shader, gpu_api, 0);
+  sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api, 0);
 
   audio_manager_init(&game->audio_manager);
   game->music_clip_cache = calloc(1, sizeof(struct AudioClipCache));
@@ -33,15 +33,15 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
 
   array_list_init(&game->sprites);
   array_list_init(&game->animated_sprites);
-  array_list_init(&game->entity_list);
+  array_list_init(&game->sorted_entity_list);
 
   player_camera_init(&game->player_camera);
   game->player = calloc(1, sizeof(struct Player));
   player_init(game->player, gpu_api, game);
-  array_list_add(&game->entity_list, &game->player->entity);
+  array_list_add(&game->sorted_entity_list, &game->player->entity);
   game->sandcastle = calloc(1, sizeof(struct Sandcastle));
   sandcastle_init(game->sandcastle, gpu_api, game);
-  array_list_add(&game->entity_list, &game->sandcastle->entity);
+  array_list_add(&game->sorted_entity_list, &game->sandcastle->entity);
 
   float draw_scale = 1.0f / 5.0f;
 
@@ -208,10 +208,10 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
     fxaa_shader_init(&game->fxaa_shader, gpu_api);
 
     sprite_shader_delete(&game->sprite_shader, gpu_api);
-    sprite_shader_init(&game->sprite_shader, gpu_api);
+    sprite_shader_init(&game->sprite_shader, gpu_api, 0);
 
     sprite_animation_shader_delete(&game->sprite_animation_shader, gpu_api);
-    sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api);
+    sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api, 0);
 
     for (int sprite_num = 0; sprite_num < array_list_size(&game->sprites); sprite_num++) {
       struct Sprite* sprite = array_list_get(&game->sprites, sprite_num);
@@ -227,8 +227,8 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
     player_recreate(game->player, gpu_api);
   }
 
-  for (int entity_num = 0; entity_num < array_list_size(&game->entity_list); entity_num++) {
-    struct Entity* entity = array_list_get(&game->entity_list, entity_num);
+  for (int entity_num = 0; entity_num < array_list_size(&game->sorted_entity_list); entity_num++) {
+    struct Entity* entity = array_list_get(&game->sorted_entity_list, entity_num);
     (*entity->update_func)(entity->entity_data, game, delta_time);
   }
   player_camera_update(&game->player_camera, delta_time);
@@ -254,8 +254,8 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
   for (int sprite_num = array_list_size(&game->sprites) - 1; sprite_num >= 0; sprite_num--)
     sprite_render(array_list_get(&game->sprites, sprite_num), gpu_api);
 
-  for (int entity_num = 0; entity_num < array_list_size(&game->entity_list); entity_num++) {
-    struct Entity* entity = array_list_get(&game->entity_list, entity_num);
+  for (int entity_num = 0; entity_num < array_list_size(&game->sorted_entity_list); entity_num++) {
+    struct Entity* entity = array_list_get(&game->sorted_entity_list, entity_num);
     (*entity->render_func)(entity->entity_data, gpu_api);
   }
 

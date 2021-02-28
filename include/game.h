@@ -45,7 +45,7 @@ struct Game {
   struct Player* player;
   struct Sandcastle* sandcastle;
 
-  struct ArrayList entity_list;
+  struct ArrayList sorted_entity_list;
 };
 
 void game_init(struct Game* game, struct Mana* mana, struct Window* window);
