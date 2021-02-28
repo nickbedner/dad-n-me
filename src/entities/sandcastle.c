@@ -24,6 +24,8 @@ int sandcastle_init(struct Sandcastle* sandcastle, struct GPUAPI* gpu_api, struc
   sandcastle->sandcastle_animation->scale = (vec3){.x = sand_castle_size, .y = sand_castle_size, .z = sand_castle_size};
 
   audio_clip_init(&sandcastle->fart_clip, game->fart_clip_cache, SOUND_AUDIO_CLIP, 0, 1.0f, 0.0f);
+
+  return 0;
 }
 
 void sandcastle_delete(struct Sandcastle* sandcastle, struct GPUAPI* gpu_api) {
