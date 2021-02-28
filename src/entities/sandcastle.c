@@ -13,17 +13,17 @@ int sandcastle_init(struct Sandcastle* sandcastle, struct GPUAPI* gpu_api, struc
   // Sandcastle
   sandcastle->sandcastle_position = (vec3){.x = -3.333f, .y = -1.4f, .z = -0.001f};
   sandcastle->sandcastle = calloc(1, sizeof(struct Sprite));
-  sprite_init(sandcastle->sandcastle, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/sandcastle.png"));
+  sprite_init(sandcastle->sandcastle, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, "./assets/textures/sandcastle.png"));
   sandcastle->sandcastle->position = sandcastle->sandcastle_position;
   sandcastle->sandcastle->scale = (vec3){.x = sand_castle_size, .y = sand_castle_size, .z = sand_castle_size};
 
   // Sandcastle animation
   sandcastle->sandcastle_animation = calloc(1, sizeof(struct SpriteAnimation));
-  sprite_animation_init(sandcastle->sandcastle_animation, gpu_api, &game->sprite_animation_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/sandcastlespritesheet.png"), 13, 1.0f / 30.0f, 0);
+  sprite_animation_init(sandcastle->sandcastle_animation, gpu_api, &game->sprite_animation_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, "./assets/textures/sandcastlespritesheet.png"), 13, 1.0f / 30.0f, 0);
   sandcastle->sandcastle_animation->position = sandcastle->sandcastle_position;
   sandcastle->sandcastle_animation->scale = (vec3){.x = sand_castle_size, .y = sand_castle_size, .z = sand_castle_size};
 
-  audio_clip_init(&sandcastle->fart_clip, game->fart_clip_cache, SOUND_AUDIO_CLIP, 0, 1.0f, 0.0f);
+  audio_clip_init(&sandcastle->fart_clip, game->resource_manager.fart_clip_cache, SOUND_AUDIO_CLIP, 0, 1.0f, 0.0f);
 
   return 0;
 }
@@ -41,7 +41,7 @@ void sandcastle_update(struct Sandcastle* sandcastle, struct Game* game, float d
       if (fabs((sandcastle->sandcastle_position.x - game->player->character_position.x + 0.25f) / 2.0f) + fabs(sandcastle->sandcastle_position.y - game->player->character_position.y + 0.5f) < 0.35f) {
         sandcastle->sandcastle_state = SANDCASTLE_ANIMATING_STATE;
         sandcastle->sandcastle_animation->loop = 0;
-        audio_manager_play_audio_clip(&game->audio_manager, &sandcastle->fart_clip);
+        audio_manager_play_audio_clip(&game->resource_manager.audio_manager, &sandcastle->fart_clip);
       }
       break;
     case (SANDCASTLE_ANIMATING_STATE):

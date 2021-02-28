@@ -12,28 +12,23 @@
 #include <mana/graphics/shaders/spriteanimationshader.h>
 #include <mana/graphics/shaders/spriteshader.h>
 #include <mana/graphics/utilities/camera.h>
-#include <mana/graphics/utilities/modelcache.h>
 #include <mana/graphics/utilities/spriteanimation.h>
-#include <mana/graphics/utilities/texturecache.h>
 #include <mana/mana.h>
 
 #include "entities/entity.h"
 #include "entities/player.h"
 #include "entities/sandcastle.h"
 #include "utilities/playercamera.h"
+#include "utilities/resourcemanager.h"
 
 struct Game {
   struct Window* window;
 
-  struct AudioManager audio_manager;
-  struct AudioClipCache* music_clip_cache;
-  struct AudioClipCache* fart_clip_cache;
-  struct AudioClip* music_clip;
-
-  struct TextureCache texture_cache;
   struct SpriteShader sprite_shader;
   struct SpriteAnimationShader sprite_animation_shader;
   struct FXAAShader fxaa_shader;
+
+  struct ResourceManager resource_manager;
 
   struct Sprite* hud_sprite;
   struct SpriteAnimation* walking_animation;
@@ -45,7 +40,11 @@ struct Game {
   struct Player* player;
   struct Sandcastle* sandcastle;
 
-  struct ArrayList sorted_entity_list;
+  struct ArrayList background_entity_list;
+  struct ArrayList stage_entity_list;
+  struct ArrayList foreground_entity_list;
+
+  struct AudioClip music_clip;
 };
 
 void game_init(struct Game* game, struct Mana* mana, struct Window* window);

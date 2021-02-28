@@ -12,17 +12,17 @@ int player_init(struct Player* player, struct GPUAPI* gpu_api, struct Game* game
 
   float draw_scale = 0.2;
 
-  sprite_init(&player->character_shadow, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/shadow.png"));
+  sprite_init(&player->character_shadow, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, "./assets/textures/shadow.png"));
   player->character_shadow.position = (vec3){.x = -2.3f, .y = 0.45f, .z = -0.002f};
   player->character_shadow.scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
 
   // Standing animation
-  sprite_animation_init(&player->standing_animation, gpu_api, &game->sprite_animation_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/standingspritesheet.png"), 4, 1.0f / 10.0f, 0);
+  sprite_animation_init(&player->standing_animation, gpu_api, &game->sprite_animation_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, "./assets/textures/standingspritesheet.png"), 4, 1.0f / 10.0f, 0);
   player->standing_animation.position = (vec3){.x = 0.0f * draw_scale, .y = 0.0f, .z = -0.01f};
   player->standing_animation.scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
 
   // Walking animation
-  sprite_animation_init(&player->walking_animation, gpu_api, &game->sprite_animation_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/walkingspritesheet.png"), 11, 1.0f / 35.0f, 0);
+  sprite_animation_init(&player->walking_animation, gpu_api, &game->sprite_animation_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, "./assets/textures/walkingspritesheet.png"), 11, 1.0f / 35.0f, 0);
   player->walking_animation.position = player->standing_animation.position;
   player->walking_animation.scale = player->standing_animation.scale;
 

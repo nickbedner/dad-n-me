@@ -4,6 +4,7 @@
 
 #include <mana/core/memoryallocator.h>
 //
+#include <mana/audio/audiomanager.h>
 #include <mana/graphics/shaders/spriteanimationshader.h>
 #include <mana/graphics/utilities/spriteanimation.h>
 #include <mana/mana.h>
