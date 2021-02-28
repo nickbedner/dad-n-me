@@ -25,6 +25,8 @@ int player_init(struct Player* player, struct GPUAPI* gpu_api, struct Game* game
   sprite_animation_init(&player->walking_animation, gpu_api, &game->sprite_animation_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/walkingspritesheet.png"), 11, 1.0f / 35.0f, 0);
   player->walking_animation.position = player->standing_animation.position;
   player->walking_animation.scale = player->standing_animation.scale;
+
+  return 0;
 }
 
 void player_delete(struct Player* player, struct GPUAPI* gpu_api) {
@@ -60,6 +62,19 @@ void player_update(struct Player* player, struct Game* game, float delta_time) {
   //    game->player_camera.camera_in_out_velocity = game->player_camera.max_camera_velocity;
   //}
   //game->player_camera.camera.position = vec3_add(game->player_camera.camera.position, added_pos);
+
+  if (input_manager->keys[GLFW_KEY_Z].state == PRESSED)
+    game->player_camera.camera.position.z += 0.01f;
+  if (input_manager->keys[GLFW_KEY_X].state == PRESSED)
+    game->player_camera.camera.position.z -= 0.01f;
+
+  if (input_manager->keys[GLFW_KEY_E].state == PRESSED)
+    game->player_camera.camera.position.y += 0.01f;
+  if (input_manager->keys[GLFW_KEY_Q].state == PRESSED)
+    game->player_camera.camera.position.y -= 0.01f;
+  //if (input_manager->keys[GLFW_KEY_X].state == PRESSED)
+  //  game->player_camera.camera.position = vec3_add(game->player_camera.camera.position, vec3_scale(game->player_camera.camera.front, ));
+
   //
   //float up_down_velocity = game->player_camera.camera_up_down_velocity * delta_time;
   //added_pos = vec3_scale(game->player_camera.camera.up, up_down_velocity);

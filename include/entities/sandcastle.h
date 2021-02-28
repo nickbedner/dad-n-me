@@ -28,6 +28,8 @@ struct Sandcastle {
   struct AudioClip fart_clip;
 };
 
+struct Game;
+
 int sandcastle_init(struct Sandcastle* sandcastle, struct GPUAPI* gpu_api, struct Game* game);
 void sandcastle_delete(struct Sandcastle* sandcastle, struct GPUAPI* gpu_api);
 void sandcastle_update(struct Sandcastle* sandcastle, struct Game* game, float delta_time);

@@ -27,6 +27,8 @@ struct Player {
   struct SpriteAnimation walking_animation;
 };
 
+struct Game;
+
 int player_init(struct Player* player, struct GPUAPI* gpu_api, struct Game* game);
 void player_delete(struct Player* player, struct GPUAPI* gpu_api);
 void player_update(struct Player* player, struct Game* game, float delta_time);

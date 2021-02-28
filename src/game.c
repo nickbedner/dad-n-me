@@ -4,22 +4,17 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   struct GPUAPI* gpu_api = &mana->engine.gpu_api;
   game->window = window;
 
-  array_list_init(&game->entity_list);
-
   fxaa_shader_init(&game->fxaa_shader, gpu_api);
   sprite_shader_init(&game->sprite_shader, gpu_api);
   sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api);
 
   audio_manager_init(&game->audio_manager);
-
   game->music_clip_cache = calloc(1, sizeof(struct AudioClipCache));
   game->fart_clip_cache = calloc(1, sizeof(struct AudioClipCache));
   audio_clip_cache_init(game->music_clip_cache, "assets/audio/music/Dad_n_Me.wav");
   audio_clip_cache_init(game->fart_clip_cache, "assets/audio/sounds/fart_2.wav");
-
   game->music_clip = calloc(1, sizeof(struct AudioClip));
   audio_clip_init(game->music_clip, game->music_clip_cache, MUSIC_AUDIO_CLIP, 1, 0.75f, 0.0125f);
-
   audio_manager_play_audio_clip(&game->audio_manager, game->music_clip);
 
   texture_cache_init(&game->texture_cache);
@@ -34,15 +29,16 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
     strcat(texture_path_buffer, current_node_path);
     texture_cache_add(&game->texture_cache, gpu_api, 1, &(struct TextureSettings){.path = texture_path_buffer, .filter_type = FILTER_LINEAR, .mode_type = MODE_CLAMP_TO_BORDER, .mip_maps_enabled = 1});
   }
+  xml_parser_delete(texture_list_node);
 
   array_list_init(&game->sprites);
   array_list_init(&game->animated_sprites);
+  array_list_init(&game->entity_list);
 
   player_camera_init(&game->player_camera);
   game->player = calloc(1, sizeof(struct Player));
   player_init(game->player, gpu_api, game);
   array_list_add(&game->entity_list, &game->player->entity);
-
   game->sandcastle = calloc(1, sizeof(struct Sandcastle));
   sandcastle_init(game->sandcastle, gpu_api, game);
   array_list_add(&game->entity_list, &game->sandcastle->entity);
@@ -155,7 +151,6 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   float cloud_scale = 10.0f * draw_scale;
   for (int loop_num = 0; loop_num < 2; loop_num++) {
     struct Sprite* sprite = calloc(1, sizeof(struct Sprite));
-    float cloud_scale = 10.0f * draw_scale;
     sprite_init(sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/clouds.png"));
     sprite->position = (vec3){.x = (loop_num * sprite->width) * 0.999f * draw_scale, .y = 10.0f, .z = 50.0f + (loop_num * 0.000001)};
     sprite->scale = (vec3){.x = cloud_scale, .y = cloud_scale, .z = cloud_scale};
