@@ -7,13 +7,8 @@
 #include <chaos/chaos.h>
 #include <mana/audio/audiomanager.h>
 #include <mana/core/inputmanager.h>
-#include <mana/graphics/entities/manifoldplanet.h>
 #include <mana/graphics/entities/sprite.h>
-#include <mana/graphics/shaders/atmosphericscattering.h>
 #include <mana/graphics/shaders/fxaashader.h>
-#include <mana/graphics/shaders/manifolddualcontouringshader.h>
-#include <mana/graphics/shaders/modelshader.h>
-#include <mana/graphics/shaders/modelstaticshader.h>
 #include <mana/graphics/shaders/spriteanimationshader.h>
 #include <mana/graphics/shaders/spriteshader.h>
 #include <mana/graphics/utilities/camera.h>
@@ -22,6 +17,7 @@
 #include <mana/graphics/utilities/texturecache.h>
 #include <mana/mana.h>
 
+#include "entities/entity.h"
 #include "entities/player.h"
 #include "entities/sandcastle.h"
 #include "utilities/playercamera.h"
@@ -48,6 +44,8 @@ struct Game {
   struct PlayerCamera player_camera;
   struct Player* player;
   struct Sandcastle* sandcastle;
+
+  struct ArrayList entity_list;
 };
 
 void game_init(struct Game* game, struct Mana* mana, struct Window* window);

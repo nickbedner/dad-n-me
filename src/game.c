@@ -4,6 +4,8 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   struct GPUAPI* gpu_api = &mana->engine.gpu_api;
   game->window = window;
 
+  array_list_init(&game->entity_list);
+
   fxaa_shader_init(&game->fxaa_shader, gpu_api);
   sprite_shader_init(&game->sprite_shader, gpu_api);
   sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api);
@@ -20,33 +22,18 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
 
   audio_manager_play_audio_clip(&game->audio_manager, game->music_clip);
 
-  struct TextureSettings texture1 = {"./assets/textures/fence.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture2 = {"./assets/textures/grass.png", FILTER_NEAREST, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture3 = {"./assets/textures/clouds.png", FILTER_NEAREST, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture4 = {"./assets/textures/back2.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture5 = {"./assets/textures/trash.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture6 = {"./assets/textures/sign.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture7 = {"./assets/textures/woodfence.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture8 = {"./assets/textures/grassshadow.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture9 = {"./assets/textures/grassdiffer.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture10 = {"./assets/textures/trash2.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture11 = {"./assets/textures/sign2.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture12 = {"./assets/textures/hud.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture13 = {"./assets/textures/sandbox.png", FILTER_NEAREST, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture14 = {"./assets/textures/walkingspritesheet.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture15 = {"./assets/textures/standingspritesheet.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture16 = {"./assets/textures/sandcastle.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture17 = {"./assets/textures/sandcastlespritesheet.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture18 = {"./assets/textures/shadow.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture19 = {"./assets/textures/forewoodfence.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture20 = {"./assets/textures/street.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture21 = {"./assets/textures/streetend.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-  struct TextureSettings texture22 = {"./assets/textures/streetgrass.png", FILTER_LINEAR, MODE_CLAMP_TO_BORDER, 1};
-
   texture_cache_init(&game->texture_cache);
-  // TODO: Keep this style and add array style
-  texture_cache_add(&game->texture_cache, gpu_api, 14, texture1, texture2, texture3, texture4, texture5, texture6, texture7, texture8, texture9, texture10, texture11, texture12, texture13, texture14);
-  texture_cache_add(&game->texture_cache, gpu_api, 8, texture15, texture16, texture17, texture18, texture19, texture20, texture21, texture22);
+  struct XmlNode* texture_list_node = xml_parser_load_xml_file("./assets/textures/texturelist.xml");
+  const char* texture_list_key;
+  struct MapIter texture_list_iter = map_iter();
+  while ((texture_list_key = map_next(texture_list_node->child_nodes, &texture_list_iter))) {
+    struct XmlNode* current_node = array_list_get(*((struct ArrayList**)map_get(texture_list_node->child_nodes, texture_list_key)), 0);
+    char texture_path_buffer[2048] = {0};
+    strcpy(texture_path_buffer, "./assets/textures/");
+    char* current_node_path = xml_node_get_data(xml_node_get_child(current_node, "path"));
+    strcat(texture_path_buffer, current_node_path);
+    texture_cache_add(&game->texture_cache, gpu_api, 1, &(struct TextureSettings){.path = texture_path_buffer, .filter_type = FILTER_LINEAR, .mode_type = MODE_CLAMP_TO_BORDER, .mip_maps_enabled = 1});
+  }
 
   array_list_init(&game->sprites);
   array_list_init(&game->animated_sprites);
@@ -54,9 +41,11 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   player_camera_init(&game->player_camera);
   game->player = calloc(1, sizeof(struct Player));
   player_init(game->player, gpu_api, game);
+  array_list_add(&game->entity_list, &game->player->entity);
 
   game->sandcastle = calloc(1, sizeof(struct Sandcastle));
   sandcastle_init(game->sandcastle, gpu_api, game);
+  array_list_add(&game->entity_list, &game->sandcastle->entity);
 
   float draw_scale = 1.0f / 5.0f;
 
@@ -243,8 +232,10 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
     player_recreate(game->player, gpu_api);
   }
 
-  sandcastle_update(game->sandcastle, game, delta_time);
-  player_update(game->player, game, delta_time);
+  for (int entity_num = 0; entity_num < array_list_size(&game->entity_list); entity_num++) {
+    struct Entity* entity = array_list_get(&game->entity_list, entity_num);
+    (*entity->update_func)(entity->entity_data, game, delta_time);
+  }
   player_camera_update(&game->player_camera, delta_time);
   game_update_input(game, &mana->engine);
 
@@ -264,10 +255,15 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
   /////////////////////////////////////////////////////////////////
 
   gbuffer_start(gpu_api->vulkan_state->gbuffer, gpu_api->vulkan_state);
+
   for (int sprite_num = array_list_size(&game->sprites) - 1; sprite_num >= 0; sprite_num--)
     sprite_render(array_list_get(&game->sprites, sprite_num), gpu_api);
-  sandcastle_render(game->sandcastle, gpu_api);
-  player_render(game->player, gpu_api);
+
+  for (int entity_num = 0; entity_num < array_list_size(&game->entity_list); entity_num++) {
+    struct Entity* entity = array_list_get(&game->entity_list, entity_num);
+    (*entity->render_func)(entity->entity_data, gpu_api);
+  }
+
   gbuffer_stop(gpu_api->vulkan_state->gbuffer, gpu_api->vulkan_state);
   blit_post_process_render(gpu_api->vulkan_state->post_process->blit_post_process, gpu_api);
 

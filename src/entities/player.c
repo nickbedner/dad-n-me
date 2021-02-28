@@ -1,6 +1,11 @@
 #include "entities/player.h"
 
 int player_init(struct Player* player, struct GPUAPI* gpu_api, struct Game* game) {
+  player->entity.entity_data = player;
+  player->entity.delete_func = (void (*)(void*, struct GPUAPI*))player_delete;
+  player->entity.update_func = (void (*)(void*, void*, float))player_update;
+  player->entity.render_func = (void (*)(void*, struct GPUAPI*))player_render;
+
   player->character_state = CHARACTER_IDLE_STATE;
   player->character_position = VEC3_ZERO;
   player->character_direction = 1.0f;
@@ -12,12 +17,12 @@ int player_init(struct Player* player, struct GPUAPI* gpu_api, struct Game* game
   player->character_shadow.scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
 
   // Standing animation
-  sprite_animation_init(&player->standing_animation, gpu_api, &game->sprite_animation_shader, texture_cache_get(&game->texture_cache, "./assets/textures/standingspritesheet.png"), 4, 1.0f / 10.0f, 0);
+  sprite_animation_init(&player->standing_animation, gpu_api, &game->sprite_animation_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/standingspritesheet.png"), 4, 1.0f / 10.0f, 0);
   player->standing_animation.position = (vec3){.x = 0.0f * draw_scale, .y = 0.0f, .z = -0.01f};
   player->standing_animation.scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
 
   // Walking animation
-  sprite_animation_init(&player->walking_animation, gpu_api, &game->sprite_animation_shader, texture_cache_get(&game->texture_cache, "./assets/textures/walkingspritesheet.png"), 11, 1.0f / 35.0f, 0);
+  sprite_animation_init(&player->walking_animation, gpu_api, &game->sprite_animation_shader.shader, texture_cache_get(&game->texture_cache, "./assets/textures/walkingspritesheet.png"), 11, 1.0f / 35.0f, 0);
   player->walking_animation.position = player->standing_animation.position;
   player->walking_animation.scale = player->standing_animation.scale;
 }

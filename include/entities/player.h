@@ -8,6 +8,7 @@
 #include <mana/graphics/utilities/spriteanimation.h>
 #include <mana/mana.h>
 
+#include "entities/entity.h"
 #include "game.h"
 
 enum CharacterState {
@@ -16,6 +17,8 @@ enum CharacterState {
 };
 
 struct Player {
+  struct Entity entity;
+
   float character_direction;
   enum CharacterState character_state;
   vec3 character_position;

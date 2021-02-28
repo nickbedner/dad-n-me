@@ -8,7 +8,9 @@
 #include <mana/graphics/utilities/spriteanimation.h>
 #include <mana/mana.h>
 
+#include "entities/entity.h"
 #include "game.h"
+
 enum SandcastleState {
   SANDCASTLE_FULL_STATE = 0,
   SANDCASTLE_ANIMATING_STATE,
@@ -16,6 +18,8 @@ enum SandcastleState {
 };
 
 struct Sandcastle {
+  struct Entity entity;
+
   enum SandcastleState sandcastle_state;
   struct Sprite* sandcastle;
   struct SpriteAnimation* sandcastle_animation;

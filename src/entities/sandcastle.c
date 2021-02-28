@@ -1,6 +1,11 @@
 #include "entities/sandcastle.h"
 
 int sandcastle_init(struct Sandcastle* sandcastle, struct GPUAPI* gpu_api, struct Game* game) {
+  sandcastle->entity.entity_data = sandcastle;
+  sandcastle->entity.delete_func = (void (*)(void*, struct GPUAPI*))sandcastle_delete;
+  sandcastle->entity.update_func = (void (*)(void*, void*, float))sandcastle_update;
+  sandcastle->entity.render_func = (void (*)(void*, struct GPUAPI*))sandcastle_render;
+
   sandcastle->sandcastle_state = SANDCASTLE_FULL_STATE;
 
   float draw_scale = 0.2;
