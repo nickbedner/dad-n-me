@@ -7,7 +7,7 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   resource_manager_init(&game->resource_manager, gpu_api);
   struct ResourceManager* resource_manager = &game->resource_manager;
 
-  audio_clip_init(&game->music_clip, resource_manager->music_clip_cache, MUSIC_AUDIO_CLIP, 1, 0.75f, 0.0125f);
+  audio_clip_init(&game->music_clip, resource_manager->music_clip_cache, MUSIC_AUDIO_CLIP, 1, 0.75f, 0.025f);
   audio_manager_play_audio_clip(&resource_manager->audio_manager, &game->music_clip);
 
   fxaa_shader_init(&game->fxaa_shader, gpu_api);
@@ -222,24 +222,34 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
 
   gpu_api->vulkan_state->gbuffer->projection_matrix = camera_get_projection_matrix(&game->player_camera.camera, game->window);
   gpu_api->vulkan_state->gbuffer->view_matrix = camera_get_view_matrix(&game->player_camera.camera);
-  //game->hud_sprite->position = (vec3){.x = game->camera.position.x + 5.5f, .y = game->camera.position.y + 2.9f, .z = game->camera.position.z + 8.0f};
-  /////////////////////////////////////////////////////////////////
+//game->hud_sprite->position = (vec3){.x = game->camera.position.x + 5.5f, .y = game->camera.position.y + 2.9f, .z = game->camera.position.z + 8.0f};
+/////////////////////////////////////////////////////////////////
+#pragma omp for
   for (int entity_num = 0; entity_num < array_list_size(&game->sprites); entity_num++) {
     struct Sprite* sprite = (struct Sprite*)array_list_get(&game->sprites, entity_num);
     sprite_update_uniforms(sprite, gpu_api);
   }
 
+#pragma omp for
   for (int sprite_animation_num = 0; sprite_animation_num < array_list_size(&game->animated_sprites); sprite_animation_num++) {
     struct SpriteAnimation* sprite_animation = array_list_get(&game->animated_sprites, sprite_animation_num);
     sprite_animation_update_uniforms(sprite_animation, gpu_api);
   }
   /////////////////////////////////////////////////////////////////
-
+  // Note: Vulkan is thread safe when drawing
   gbuffer_start(gpu_api->vulkan_state->gbuffer, gpu_api->vulkan_state);
-
+#pragma omp for
   for (int sprite_num = array_list_size(&game->sprites) - 1; sprite_num >= 0; sprite_num--)
     sprite_render(array_list_get(&game->sprites, sprite_num), gpu_api);
 
+  // Draw order sorting
+  for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_list); entity_num++) {
+    // Below y value checks will need to be function calls in order to handle implcit function for angled sprites
+    for (int other_entity_num = entity_num; other_entity_num > 0 && ((struct Entity*)array_list_get(&game->stage_entity_list, other_entity_num))->position.y > ((struct Entity*)array_list_get(&game->stage_entity_list, other_entity_num - 1))->position.y; other_entity_num--)
+      array_list_swap(&game->stage_entity_list, other_entity_num, other_entity_num - 1);
+  }
+
+#pragma omp for
   for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_list); entity_num++) {
     struct Entity* entity = array_list_get(&game->stage_entity_list, entity_num);
     (*entity->render_func)(entity->entity_data, gpu_api);

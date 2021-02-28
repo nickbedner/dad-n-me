@@ -21,7 +21,6 @@ struct Player {
 
   float character_direction;
   enum CharacterState character_state;
-  vec3 character_position;
   struct Sprite character_shadow;
   struct SpriteAnimation standing_animation;
   struct SpriteAnimation walking_animation;

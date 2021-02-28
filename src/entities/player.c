@@ -7,7 +7,7 @@ int player_init(struct Player* player, struct GPUAPI* gpu_api, struct Game* game
   player->entity.render_func = (void (*)(void*, struct GPUAPI*))player_render;
 
   player->character_state = CHARACTER_IDLE_STATE;
-  player->character_position = VEC3_ZERO;
+  player->entity.position = VEC3_ZERO;
   player->character_direction = 1.0f;
 
   float draw_scale = 0.2;
@@ -87,7 +87,7 @@ void player_update(struct Player* player, struct Game* game, float delta_time) {
   //    game->player_camera.camera_up_down_velocity -= 0.005f;
   //}
   //game->player_camera.camera.position = vec3_add(game->player_camera.camera.position, added_pos);
-  float camera_mov_diff = (game->player_camera.camera.position.x - game->player->character_position.x) * 4.0f * delta_time;
+  float camera_mov_diff = (game->player_camera.camera.position.x - game->player->entity.position.x) * 4.0f * delta_time;
   // TODO: Calculate camera velocity then use this to clamp speed
   //if (camera_mov_diff > 0.0f && camera_mov_diff > game->player_camera.max_camera_velocity)
   //  camera_mov_diff = game->player_camera.max_camera_velocity;
@@ -101,21 +101,21 @@ void player_update(struct Player* player, struct Game* game, float delta_time) {
   if (input_manager->keys[GLFW_KEY_A].state == PRESSED) {
     player->character_state = CHARACTER_WALKING_STATE;
     player->character_direction = -1.0f;
-    player->character_position.x += 0.025f;
+    player->entity.position.x += 0.025f;
   }
   if (input_manager->keys[GLFW_KEY_D].state == PRESSED) {
     player->character_state = CHARACTER_WALKING_STATE;
     player->character_direction = 1.0f;
-    player->character_position.x -= 0.025f;
+    player->entity.position.x -= 0.025f;
   }
 
   if (input_manager->keys[GLFW_KEY_W].state == PRESSED) {
     player->character_state = CHARACTER_WALKING_STATE;
-    player->character_position.y += 0.015f;
+    player->entity.position.y += 0.015f;
   }
   if (input_manager->keys[GLFW_KEY_S].state == PRESSED) {
     player->character_state = CHARACTER_WALKING_STATE;
-    player->character_position.y -= 0.015f;
+    player->entity.position.y -= 0.015f;
   }
 
   if (glfwJoystickIsGamepad(GLFW_JOYSTICK_1)) {
@@ -129,35 +129,35 @@ void player_update(struct Player* player, struct Game* game, float delta_time) {
       else {
         player->character_state = CHARACTER_WALKING_STATE;
         player->character_direction = left_x_axis;
-        player->character_position.x -= left_x_axis * 0.025f;
+        player->entity.position.x -= left_x_axis * 0.025f;
       }
 
       if (fabs(left_y_axis) < 0.25f)
         left_y_axis = 0.0f;
       else {
         player->character_state = CHARACTER_WALKING_STATE;
-        player->character_position.y -= left_y_axis * 0.015f;
+        player->entity.position.y -= left_y_axis * 0.015f;
       }
     }
   }
 
   if (player->character_direction > 0.0f)
-    player->character_shadow.position = (vec3){.x = player->character_position.x + 0.05f, .y = player->character_position.y - 0.65f, player->character_shadow.position.z};
+    player->character_shadow.position = (vec3){.x = player->entity.position.x + 0.05f, .y = player->entity.position.y - 0.65f, player->character_shadow.position.z};
   else
-    player->character_shadow.position = (vec3){.x = player->character_position.x - 0.05f, .y = player->character_position.y - 0.65f, player->character_shadow.position.z};
+    player->character_shadow.position = (vec3){.x = player->entity.position.x - 0.05f, .y = player->entity.position.y - 0.65f, player->character_shadow.position.z};
 
   switch (player->character_state) {
     case (CHARACTER_IDLE_STATE):
       player->standing_animation.direction = player->character_direction;
       sprite_animation_update(&player->standing_animation, delta_time);
-      player->standing_animation.position.x = player->character_position.x;
-      player->standing_animation.position.y = player->character_position.y;
+      player->standing_animation.position.x = player->entity.position.x;
+      player->standing_animation.position.y = player->entity.position.y;
       break;
     case (CHARACTER_WALKING_STATE):
       player->walking_animation.direction = player->character_direction;
       sprite_animation_update(&player->walking_animation, delta_time);
-      player->walking_animation.position.x = player->character_position.x;
-      player->walking_animation.position.y = player->character_position.y;
+      player->walking_animation.position.x = player->entity.position.x;
+      player->walking_animation.position.y = player->entity.position.y;
       break;
   }
 }

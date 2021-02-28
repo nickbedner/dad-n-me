@@ -22,9 +22,8 @@ struct Sandcastle {
   struct Entity entity;
 
   enum SandcastleState sandcastle_state;
-  struct Sprite* sandcastle;
+  struct Sprite* sandcastle_sprite;
   struct SpriteAnimation* sandcastle_animation;
-  vec3 sandcastle_position;
 
   struct AudioClip fart_clip;
 };

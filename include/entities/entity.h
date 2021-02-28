@@ -7,6 +7,7 @@
 #include <mana/mana.h>
 
 struct Entity {
+  vec3 position;
   void* entity_data;
   void (*delete_func)(void*, struct GPUAPI*);
   void (*update_func)(void*, void*, float);
