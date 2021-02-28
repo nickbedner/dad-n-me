@@ -27,7 +27,7 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
     strcpy(texture_path_buffer, "./assets/textures/");
     char* current_node_path = xml_node_get_data(xml_node_get_child(current_node, "path"));
     strcat(texture_path_buffer, current_node_path);
-    texture_cache_add(&game->texture_cache, gpu_api, 1, &(struct TextureSettings){.path = texture_path_buffer, .filter_type = FILTER_LINEAR, .mode_type = MODE_CLAMP_TO_BORDER, .mip_maps_enabled = 1});
+    texture_cache_add(&game->texture_cache, gpu_api, 1, &(struct TextureSettings){.path = texture_path_buffer, .filter_type = FILTER_LINEAR, .mode_type = MODE_CLAMP_TO_BORDER, .mip_maps_enabled = 1, .premultiplied_alpha = 0});
   }
   xml_parser_delete(texture_list_node);
 
@@ -227,6 +227,8 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
     player_recreate(game->player, gpu_api);
   }
 
+// TODO: Switch to job system
+#pragma omp for
   for (int entity_num = 0; entity_num < array_list_size(&game->sorted_entity_list); entity_num++) {
     struct Entity* entity = array_list_get(&game->sorted_entity_list, entity_num);
     (*entity->update_func)(entity->entity_data, game, delta_time);
@@ -287,9 +289,6 @@ void game_update_input(struct Game* game, struct Engine* engine) {
     game->fxaa_shader.fxaa_on ^= 1;
     game->fxaa_shader.fxaa_on ? printf("FXAA ON\n") : printf("FXAA OFF\n");
   }
-
-  //if (input_manager->keys[GLFW_KEY_2].pushed == 1)
-  //  audio_manager_play_audio_clip(game->audio_manager, game->fart_clip);
 
   if (input_manager->keys[GLFW_KEY_O].pushed == 1) {
     game->audio_manager.master_volume -= 0.1f;
