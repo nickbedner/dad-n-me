@@ -21,7 +21,8 @@ else()
         add_definitions(-DCUSTOM_ALLOCATOR=1)
 endif()
 
-add_subdirectory(lib/Mana buildmana)
+add_subdirectory(lib/mana buildmana)
+add_subdirectory(lib/dad-n-me-server builddad-n-me-server)
 
 if (WIN32)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp")
@@ -56,10 +57,13 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-visibility -Wno-pragma-pack -Wno-deprec
 #        message("Some other build type.")
 #endif()
 
-target_link_libraries(DadnMe mana)
+target_link_libraries(DadnMe 
+        mana
+        DadNMeServer)
 
 set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/dad-n-me-server/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/lib/cstorage/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/lib/cnoise/include
