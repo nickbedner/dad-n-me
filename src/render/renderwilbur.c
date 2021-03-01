@@ -3,7 +3,11 @@
 int render_wilbur_init(struct RenderWilbur* render_wilbur, struct GPUAPI* gpu_api, struct Game* game) {
   wilbur_init(&render_wilbur->wilbur, game->game_state);
 
+  render_wilbur->wilbur.entity.entity_data = render_wilbur;
+  render_wilbur->wilbur.entity.delete_func = (void (*)(void*, void*))render_wilbur_delete;
+  render_wilbur->wilbur.entity.update_func = (void (*)(void*, void*, float))render_wilbur_update;
   render_wilbur->wilbur.entity.render_func = (void (*)(void*, void*))render_wilbur_render;
+  render_wilbur->wilbur.entity.recreate_func = (void (*)(void*, void*))render_wilbur_recreate;
 
   float draw_scale = 0.2;
 
@@ -20,6 +24,9 @@ int render_wilbur_init(struct RenderWilbur* render_wilbur, struct GPUAPI* gpu_ap
   sprite_animation_init(&render_wilbur->walking_animation, gpu_api, &game->sprite_animation_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, "./assets/textures/wilbur/wilburwalkingspritesheet.png"), 8, 1.0f / 30.0f, 0);
   render_wilbur->walking_animation.position = render_wilbur->standing_animation.position;
   render_wilbur->walking_animation.scale = render_wilbur->standing_animation.scale;
+
+  render_wilbur->wilbur.entity.width = render_wilbur->standing_animation.width * draw_scale;
+  render_wilbur->wilbur.entity.height = render_wilbur->standing_animation.height * draw_scale;
 
   return 0;
 }

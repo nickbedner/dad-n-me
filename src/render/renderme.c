@@ -3,7 +3,11 @@
 int render_me_init(struct RenderMe* render_me, struct GPUAPI* gpu_api, struct Game* game) {
   me_init(&render_me->me, game->game_state);
 
+  render_me->me.entity.entity_data = render_me;
+  render_me->me.entity.delete_func = (void (*)(void*, void*))render_me_delete;
+  render_me->me.entity.update_func = (void (*)(void*, void*, float))render_me_update;
   render_me->me.entity.render_func = (void (*)(void*, void*))render_me_render;
+  render_me->me.entity.recreate_func = (void (*)(void*, void*))render_me_recreate;
 
   float draw_scale = 0.2;
 
@@ -21,6 +25,9 @@ int render_me_init(struct RenderMe* render_me, struct GPUAPI* gpu_api, struct Ga
   render_me->walking_animation.position = render_me->standing_animation.position;
   render_me->walking_animation.scale = render_me->standing_animation.scale;
 
+  render_me->me.entity.width = render_me->standing_animation.width * draw_scale;
+  render_me->me.entity.height = render_me->standing_animation.height * draw_scale;
+
   return 0;
 }
 void render_me_delete(struct RenderMe* render_me, struct GPUAPI* gpu_api) {
@@ -37,7 +44,9 @@ void render_me_update(struct RenderMe* render_me, struct Game* game, float delta
   struct InputManager* input_manager = game->window->input_manager;
   struct Me* me = &render_me->me;
 
-  if (input_manager->keys[GLFW_KEY_Z].state == PRESSED)
+  me->state = ME_IDLE_STATE;
+
+  /*if (input_manager->keys[GLFW_KEY_Z].state == PRESSED)
     game->player_camera.camera.position.z += 0.01f;
   if (input_manager->keys[GLFW_KEY_X].state == PRESSED)
     game->player_camera.camera.position.z -= 0.01f;
@@ -51,7 +60,6 @@ void render_me_update(struct RenderMe* render_me, struct Game* game, float delta
 
   game->player_camera.camera.position.x -= camera_mov_diff;
 
-  me->state = ME_IDLE_STATE;
 
   if (input_manager->keys[GLFW_KEY_A].state == PRESSED) {
     me->state = ME_WALKING_STATE;
@@ -94,7 +102,7 @@ void render_me_update(struct RenderMe* render_me, struct Game* game, float delta
         me->entity.position.y -= left_y_axis * 0.015f;
       }
     }
-  }
+  }*/
 
   if (me->entity.direction > 0.0f)
     render_me->shadow.position = (vec3){.x = me->entity.position.x + 0.05f, .y = me->entity.position.y - 0.65f, render_me->shadow.position.z};

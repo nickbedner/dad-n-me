@@ -13,6 +13,7 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   audio_manager_play_audio_clip(&resource_manager->audio_manager, &game->music_clip);
 
   fxaa_shader_init(&game->fxaa_shader, gpu_api);
+  game->fxaa_shader.on = 0;
   sprite_shader_init(&game->sprite_shader, gpu_api, 0);
   sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api, 0);
 
@@ -23,10 +24,15 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
 
   game->render_wilbur = calloc(1, sizeof(struct RenderWilbur));
   render_wilbur_init(game->render_wilbur, gpu_api, game);
+  game->render_wilbur->wilbur.entity.position = (vec3){.x = -0.1f, .y = -0.1, .z = 0.0f};
+  game->player_camera.camera.position.x = game->render_wilbur->wilbur.entity.position.x;
+  game->player_camera.camera.position.y = game->render_wilbur->wilbur.entity.position.y;
 
   //array_list_init(&game->sprites);
   //array_list_init(&game->animated_sprites);
-  //array_list_init(&game->stage_entity_list);
+  array_list_init(&game->stage_entity_list);
+  array_list_add(&game->stage_entity_list, &game->render_me->me.entity);
+  array_list_add(&game->stage_entity_list, &game->render_wilbur->wilbur.entity);
 
   //game->player = calloc(1, sizeof(struct Player));
   //player_init(game->player, gpu_api, game);
@@ -181,6 +187,17 @@ void game_delete(struct Game* game, struct Mana* mana) {
   //array_list_delete(&game->sprites);
   //array_list_delete(&game->animated_sprites);
   //array_list_delete(&game->stage_entity_list);
+
+  for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_list); entity_num++) {
+    struct Entity* entity = array_list_get(&game->stage_entity_list, entity_num);
+    (*entity->delete_func)(entity->entity_data, gpu_api);
+  }
+
+  free(game->render_me);
+  free(game->render_wilbur);
+
+  array_list_delete(&game->stage_entity_list);
+
   sprite_animation_shader_delete(&game->sprite_animation_shader, gpu_api);
   sprite_shader_delete(&game->sprite_shader, gpu_api);
 
@@ -198,12 +215,18 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
 
     fxaa_shader_delete(&game->fxaa_shader, gpu_api);
     fxaa_shader_init(&game->fxaa_shader, gpu_api);
+    game->fxaa_shader.on = 0;
 
     sprite_shader_delete(&game->sprite_shader, gpu_api);
     sprite_shader_init(&game->sprite_shader, gpu_api, 0);
 
     sprite_animation_shader_delete(&game->sprite_animation_shader, gpu_api);
     sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api, 0);
+
+    for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_list); entity_num++) {
+      struct Entity* entity = array_list_get(&game->stage_entity_list, entity_num);
+      (*entity->recreate_func)(entity->entity_data, gpu_api);
+    }
 
     //for (int sprite_num = 0; sprite_num < array_list_size(&game->sprites); sprite_num++) {
     //  struct Sprite* sprite = array_list_get(&game->sprites, sprite_num);
@@ -249,29 +272,26 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
   gpu_api->vulkan_state->gbuffer->view_matrix = camera_get_view_matrix(&game->player_camera.camera);
 
   gbuffer_start(gpu_api->vulkan_state->gbuffer, gpu_api->vulkan_state);
-
-  //render_me_update(game->render_me, game, delta_time);
-  //render_me_render(game->render_me, gpu_api);
-
-  render_wilbur_update(game->render_wilbur, game, delta_time);
-  render_wilbur_render(game->render_wilbur, gpu_api);
-  //#pragma omp for
-  //  for (int sprite_num = array_list_size(&game->sprites) - 1; sprite_num >= 0; sprite_num--)
-  //    sprite_render(array_list_get(&game->sprites, sprite_num), gpu_api);
-  //
-  //  // Draw order sorting
-  //  for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_list); entity_num++) {
-  //    //Note: Take into account image half height
-  //    // Below y value checks will need to be function calls in order to handle implicit function for angled sprites
-  //    for (int other_entity_num = entity_num; other_entity_num > 0 && ((struct Entity*)array_list_get(&game->stage_entity_list, other_entity_num))->position.y > ((struct Entity*)array_list_get(&game->stage_entity_list, other_entity_num - 1))->position.y; other_entity_num--)
-  //      array_list_swap(&game->stage_entity_list, other_entity_num, other_entity_num - 1);
-  //  }
-  //
-  //#pragma omp for
-  //  for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_list); entity_num++) {
-  //    struct Entity* entity = array_list_get(&game->stage_entity_list, entity_num);
-  //    (*entity->render_func)(entity->entity_data, gpu_api);
-  //  }
+  // Draw order sorting
+  for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_list); entity_num++) {
+    //Note: Take into account image half height
+    // Below y value checks will need to be function calls in order to handle implicit function for angled sprites
+    //&& ((struct Entity*)array_list_get(&game->stage_entity_list, other_entity_num))->position.y > ((struct Entity*)array_list_get(&game->stage_entity_list, other_entity_num - 1))->position.y
+    for (int other_entity_num = entity_num; other_entity_num > 0; other_entity_num--) {
+      struct Entity* entity_one = ((struct Entity*)array_list_get(&game->stage_entity_list, other_entity_num));
+      struct Entity* entity_two = ((struct Entity*)array_list_get(&game->stage_entity_list, other_entity_num - 1));
+      if (entity_one->position.y - entity_one->height / 2.0f < entity_two->position.y - entity_two->height / 2.0f)
+        continue;
+      array_list_swap(&game->stage_entity_list, other_entity_num, other_entity_num - 1);
+    }
+  }
+// Render state sprites
+#pragma omp for
+  for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_list); entity_num++) {
+    struct Entity* entity = array_list_get(&game->stage_entity_list, entity_num);
+    (*entity->update_func)(entity->entity_data, game, delta_time);
+    (*entity->render_func)(entity->entity_data, gpu_api);
+  }
   gbuffer_stop(gpu_api->vulkan_state->gbuffer, gpu_api->vulkan_state);
 
   blit_post_process_render(gpu_api->vulkan_state->post_process->blit_post_process, gpu_api);
@@ -290,8 +310,8 @@ void game_update_input(struct Game* game, struct Engine* engine) {
     glfwSetWindowShouldClose(engine->graphics_library.glfw_library.glfw_window, 1);
 
   if (input_manager->keys[GLFW_KEY_1].pushed == 1) {
-    game->fxaa_shader.fxaa_on ^= 1;
-    game->fxaa_shader.fxaa_on ? printf("FXAA ON\n") : printf("FXAA OFF\n");
+    game->fxaa_shader.on ^= 1;
+    game->fxaa_shader.on ? printf("FXAA ON\n") : printf("FXAA OFF\n");
   }
 
   if (input_manager->keys[GLFW_KEY_O].pushed == 1) {

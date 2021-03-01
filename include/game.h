@@ -42,7 +42,7 @@ struct Game {
   //struct Sandcastle* sandcastle;
 
   //struct ArrayList background_entity_list;
-  //struct ArrayList stage_entity_list;
+  struct ArrayList stage_entity_list;
   //struct ArrayList foreground_entity_list;
 
   struct AudioClip music_clip;
