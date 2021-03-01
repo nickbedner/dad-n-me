@@ -1,3 +1,6 @@
 [submodule "lib/mana"]
 	path = lib/mana
 	url = https://github.com/nickbedner/mana
+[submodule "lib/dad-n-me-server"]
+	path = lib/dad-n-me-server
+	url = https://github.com/nickbedner/dad-n-me-server
