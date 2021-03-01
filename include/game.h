@@ -16,7 +16,8 @@
 #include <mana/graphics/utilities/spriteanimation.h>
 #include <mana/mana.h>
 
-#include "render/renderplayer.h"
+#include "render/renderme.h"
+#include "render/renderwilbur.h"
 #include "utilities/playercamera.h"
 #include "utilities/resourcemanager.h"
 
@@ -36,7 +37,8 @@ struct Game {
   //struct ArrayList animated_sprites;
 
   struct PlayerCamera player_camera;
-  struct RenderPlayer* render_player;
+  struct RenderMe* render_me;
+  struct RenderWilbur* render_wilbur;
   //struct Sandcastle* sandcastle;
 
   //struct ArrayList background_entity_list;

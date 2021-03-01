@@ -62,4 +62,10 @@
 	<streetend>
 		<path>streetend.png</path>
 	</streetend>
+	<wilburwalkingspritesheet>
+		<path>wilbur/wilburwalkingspritesheet.png</path>
+	</wilburwalkingspritesheet>
+	<wilburstandingspritesheet>
+		<path>wilbur/wilburstandingspritesheet.png</path>
+	</wilburstandingspritesheet>
 </textures>

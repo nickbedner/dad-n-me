@@ -16,14 +16,18 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   sprite_shader_init(&game->sprite_shader, gpu_api, 0);
   sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api, 0);
 
-  game->render_player = calloc(1, sizeof(struct RenderPlayer));
-  render_player_init(game->render_player, gpu_api, game);
+  player_camera_init(&game->player_camera);
+
+  game->render_me = calloc(1, sizeof(struct RenderMe));
+  render_me_init(game->render_me, gpu_api, game);
+
+  game->render_wilbur = calloc(1, sizeof(struct RenderWilbur));
+  render_wilbur_init(game->render_wilbur, gpu_api, game);
 
   //array_list_init(&game->sprites);
   //array_list_init(&game->animated_sprites);
   //array_list_init(&game->stage_entity_list);
 
-  //player_camera_init(&game->player_camera);
   //game->player = calloc(1, sizeof(struct Player));
   //player_init(game->player, gpu_api, game);
   //array_list_add(&game->stage_entity_list, &game->player->entity);
@@ -222,11 +226,7 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
   //    struct Entity* entity = array_list_get(&game->stage_entity_list, entity_num);
   //    (*entity->update_func)(entity->entity_data, game, delta_time);
   //  }
-  //  player_camera_update(&game->player_camera, delta_time);
-  //  game_update_input(game, &mana->engine);
-  //
-  //  gpu_api->vulkan_state->gbuffer->projection_matrix = camera_get_projection_matrix(&game->player_camera.camera, game->window);
-  //  gpu_api->vulkan_state->gbuffer->view_matrix = camera_get_view_matrix(&game->player_camera.camera);
+
   ////game->hud_sprite->position = (vec3){.x = game->camera.position.x + 5.5f, .y = game->camera.position.y + 2.9f, .z = game->camera.position.z + 8.0f};
   ///////////////////////////////////////////////////////////////////
   //#pragma omp for
@@ -242,9 +242,19 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
   //  }
   //  /////////////////////////////////////////////////////////////////
   //  // Note: Vulkan is thread safe when drawing
+  player_camera_update(&game->player_camera, delta_time);
+  game_update_input(game, &mana->engine);
+
+  gpu_api->vulkan_state->gbuffer->projection_matrix = camera_get_projection_matrix(&game->player_camera.camera, game->window);
+  gpu_api->vulkan_state->gbuffer->view_matrix = camera_get_view_matrix(&game->player_camera.camera);
+
   gbuffer_start(gpu_api->vulkan_state->gbuffer, gpu_api->vulkan_state);
-  render_player_update(game->render_player, game, delta_time);
-  render_player_render(game->render_player, gpu_api);
+
+  //render_me_update(game->render_me, game, delta_time);
+  //render_me_render(game->render_me, gpu_api);
+
+  render_wilbur_update(game->render_wilbur, game, delta_time);
+  render_wilbur_render(game->render_wilbur, gpu_api);
   //#pragma omp for
   //  for (int sprite_num = array_list_size(&game->sprites) - 1; sprite_num >= 0; sprite_num--)
   //    sprite_render(array_list_get(&game->sprites, sprite_num), gpu_api);
@@ -262,19 +272,11 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
   //    struct Entity* entity = array_list_get(&game->stage_entity_list, entity_num);
   //    (*entity->render_func)(entity->entity_data, gpu_api);
   //  }
-
   gbuffer_stop(gpu_api->vulkan_state->gbuffer, gpu_api->vulkan_state);
+
   blit_post_process_render(gpu_api->vulkan_state->post_process->blit_post_process, gpu_api);
-
   fxaa_shader_render(&game->fxaa_shader, gpu_api);
-
   blit_swap_chain_render(gpu_api->vulkan_state->swap_chain->blit_swap_chain, gpu_api);
-
-  float duration = delta_time;
-  if (duration <= 0.0f)
-    return;
-  else if (duration > 0.05f)
-    duration = 0.05f;
 }
 
 void game_update_input(struct Game* game, struct Engine* engine) {
