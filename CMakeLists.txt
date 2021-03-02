@@ -22,6 +22,8 @@ else()
 endif()
 
 add_subdirectory(lib/mana buildmana)
+
+set(DAD_N_ME_SERVER_STATIC_LIBRARY ON CACHE BOOL "" FORCE)
 add_subdirectory(lib/dad-n-me-server builddad-n-me-server)
 
 if (WIN32)

@@ -1,71 +1,71 @@
 <textures>
 	<streetgrass>
-		<path>streetgrass.png</path>
+		<path>floortiles/streetgrass.png</path>
 	</streetgrass>
 	<fence>
-		<path>fence.png</path>
+		<path>environment/fence.png</path>
 	</fence>
 	<woodfence>
-		<path>woodfence.png</path>
+		<path>environment/woodfence.png</path>
 	</woodfence>
 	<grass>
-		<path>grass.png</path>
+		<path>floortiles/grass.png</path>
 	</grass>
 	<grassshadow>
-		<path>grassshadow.png</path>
+		<path>floortiles/grassshadow.png</path>
 	</grassshadow>
 	<clouds>
-		<path>clouds.png</path>
+		<path>background/clouds.png</path>
 	</clouds>
 	<back2>
-		<path>back2.png</path>
+		<path>background/back2.png</path>
 	</back2>
 	<trash>
-		<path>trash.png</path>
+		<path>doodads/trash.png</path>
 	</trash>
 	<trash2>
-		<path>trash2.png</path>
+		<path>doodads/trash2.png</path>
 	</trash2>
 	<sign>
-		<path>sign.png</path>
+		<path>doodads/sign.png</path>
 	</sign>
 	<sign2>
-		<path>sign2.png</path>
+		<path>doodads/sign2.png</path>
 	</sign2>
 	<hud>
-		<path>hud.png</path>
+		<path>characters/me/mehud.png</path>
 	</hud>
 	<sandbox>
-		<path>sandbox.png</path>
+		<path>doodads/sandbox.png</path>
 	</sandbox>
-	<walkingspritesheet>
-		<path>walkingspritesheet.png</path>
-	</walkingspritesheet>
-	<standingspritesheet>
-		<path>standingspritesheet.png</path>
-	</standingspritesheet>
+	<mewalkingspritesheet>
+		<path>characters/me/mewalkingspritesheet.png</path>
+	</mewalkingspritesheet>
+	<mestandingspritesheet>
+		<path>characters/me/mestandingspritesheet.png</path>
+	</mestandingspritesheet>
 	<sandcastle>
-		<path>sandcastle.png</path>
+		<path>doodads/sandcastle.png</path>
 	</sandcastle>
 	<sandcastlespritesheet>
-		<path>sandcastlespritesheet.png</path>
+		<path>doodads/sandcastlespritesheet.png</path>
 	</sandcastlespritesheet>
 	<shadow>
-		<path>shadow.png</path>
+		<path>characters/shadow.png</path>
 	</shadow>
 	<forewoodfence>
-		<path>forewoodfence.png</path>
+		<path>foreground/forewoodfence.png</path>
 	</forewoodfence>
 	<street>
-		<path>street.png</path>
+		<path>floortiles/street.png</path>
 	</street>
 	<streetend>
-		<path>streetend.png</path>
+		<path>floortiles/streetend.png</path>
 	</streetend>
 	<wilburwalkingspritesheet>
-		<path>wilbur/wilburwalkingspritesheet.png</path>
+		<path>characters/wilbur/wilburwalkingspritesheet.png</path>
 	</wilburwalkingspritesheet>
 	<wilburstandingspritesheet>
-		<path>wilbur/wilburstandingspritesheet.png</path>
+		<path>characters/wilbur/wilburstandingspritesheet.png</path>
 	</wilburstandingspritesheet>
 </textures>

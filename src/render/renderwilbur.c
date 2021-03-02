@@ -11,17 +11,17 @@ int render_wilbur_init(struct RenderWilbur* render_wilbur, struct GPUAPI* gpu_ap
 
   float draw_scale = 0.2;
 
-  sprite_init(&render_wilbur->shadow, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, "./assets/textures/shadow.png"));
+  sprite_init(&render_wilbur->shadow, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, "./assets/textures/characters/shadow.png"));
   render_wilbur->shadow.position = (vec3){.x = -2.3f, .y = 0.45f, .z = -0.002f};
   render_wilbur->shadow.scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
 
   // Standing animation
-  sprite_animation_init(&render_wilbur->standing_animation, gpu_api, &game->sprite_animation_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, "./assets/textures/wilbur/wilburstandingspritesheet.png"), 1, 1.0f / 10.0f, 0);
+  sprite_animation_init(&render_wilbur->standing_animation, gpu_api, &game->sprite_animation_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, "./assets/textures/characters/wilbur/wilburstandingspritesheet.png"), 1, 1.0f / 10.0f, 0);
   render_wilbur->standing_animation.position = (vec3){.x = 0.0f * draw_scale, .y = 0.0f, .z = -0.01f};
   render_wilbur->standing_animation.scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
 
   // Walking animation
-  sprite_animation_init(&render_wilbur->walking_animation, gpu_api, &game->sprite_animation_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, "./assets/textures/wilbur/wilburwalkingspritesheet.png"), 8, 1.0f / 30.0f, 0);
+  sprite_animation_init(&render_wilbur->walking_animation, gpu_api, &game->sprite_animation_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, "./assets/textures/characters/wilbur/wilburwalkingspritesheet.png"), 8, 1.0f / 30.0f, 0);
   render_wilbur->walking_animation.position = render_wilbur->standing_animation.position;
   render_wilbur->walking_animation.scale = render_wilbur->standing_animation.scale;
 
