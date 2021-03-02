@@ -7,7 +7,6 @@ int resource_manager_init(struct ResourceManager* resource_manager, struct GPUAP
   audio_clip_cache_init(resource_manager->music_clip_cache, "assets/audio/music/Dad_n_Me.wav");
   audio_clip_cache_init(resource_manager->fart_clip_cache, "assets/audio/sounds/fart_2.wav");
 
-  // Multithreaded, data driven, and data-oriented texture loading testing
   texture_cache_init(&resource_manager->texture_cache);
   struct XmlNode* texture_list_node = xml_parser_load_xml_file("./assets/textures/texturelist.xml");
   const char* texture_list_key = NULL;

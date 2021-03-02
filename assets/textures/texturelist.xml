@@ -10,6 +10,7 @@
 	</woodfence>
 	<grass>
 		<path>floortiles/grass.png</path>
+		<scale>0.5</scale>
 	</grass>
 	<grassshadow>
 		<path>floortiles/grassshadow.png</path>

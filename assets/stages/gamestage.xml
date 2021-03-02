@@ -1,6 +1,11 @@
 <gamestage>
 	<floortiles>
 		<grass>
+			<position>
+				<x></x>
+				<y></y>
+				<z></z>
+				
 		</grass>
 	</floortiles>
 </gamestage>
