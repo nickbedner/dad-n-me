@@ -103,6 +103,10 @@ void render_wilbur_update(struct RenderWilbur* render_wilbur, struct Game* game,
     }
   }
 
+  // TODO: Yucky hardcoded top bounds
+  if (wilbur->entity.position.y > 0.4)
+    wilbur->entity.position.y = 0.4f;
+
   if (wilbur->entity.direction > 0.0f)
     render_wilbur->shadow.position = (vec3){.x = wilbur->entity.position.x + 0.05f, .y = wilbur->entity.position.y - 0.65f, render_wilbur->shadow.position.z};
   else

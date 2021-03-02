@@ -78,6 +78,7 @@ set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/lib/chaos/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/lib/libsndfile/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/lib/libsoundio/soundio
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/lib/cxml-parser/include
         ${OpenMP_CXX_LIBRARIES})
 
 target_include_directories(DadnMe PUBLIC ${includeList})

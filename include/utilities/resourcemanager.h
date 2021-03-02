@@ -5,9 +5,9 @@
 #include <mana/core/memoryallocator.h>
 //
 #include <mana/audio/audiomanager.h>
-#include <mana/core/xmlparser.h>
 #include <mana/graphics/utilities/texturecache.h>
 #include <mana/mana.h>
+#include <xmlparser.h>
 
 struct ResourceManager {
   // TODO: Move to someplace more abstract this is way too specfic
