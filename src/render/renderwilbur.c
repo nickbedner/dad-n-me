@@ -44,16 +44,7 @@ void render_wilbur_update(struct RenderWilbur* render_wilbur, struct Game* game,
   struct InputManager* input_manager = game->window->input_manager;
   struct Wilbur* wilbur = &render_wilbur->wilbur;
 
-  if (input_manager->keys[GLFW_KEY_Z].state == PRESSED)
-    game->player_camera.camera.position.z += 0.01f;
-  if (input_manager->keys[GLFW_KEY_X].state == PRESSED)
-    game->player_camera.camera.position.z -= 0.01f;
-
-  if (input_manager->keys[GLFW_KEY_E].state == PRESSED)
-    game->player_camera.camera.position.y += 0.01f;
-  if (input_manager->keys[GLFW_KEY_Q].state == PRESSED)
-    game->player_camera.camera.position.y -= 0.01f;
-
+  // TODO: Switch to focus on object instead of hard coded character
   float camera_mov_diff = (game->player_camera.camera.position.x - wilbur->entity.position.x) * 4.0f * delta_time;
 
   game->player_camera.camera.position.x -= camera_mov_diff;

@@ -21,7 +21,7 @@ static inline void game_hotswap_scenery(struct Game* game, struct GPUAPI* gpu_ap
     for (int repeat_num = 0; repeat_num < scenery->repeat_factor; repeat_num++) {
       struct RenderScenery* new_scenery = calloc(1, sizeof(struct RenderScenery));
       render_scenery_init(new_scenery, gpu_api, game, scenery);
-      new_scenery->scenery.entity.position.x = new_scenery->scenery.entity.position.x + ((new_scenery->texture.width * new_scenery->texture.scale.x) * repeat_num) * 0.99f;
+      new_scenery->scenery.entity.position.x = new_scenery->scenery.entity.position.x + (new_scenery->scenery.entity.width * repeat_num) * new_scenery->scenery.offset;
       array_list_add(&game->scenery_render_list, new_scenery);
     }
   }
@@ -56,15 +56,16 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api, 0);
 
   player_camera_init(&game->player_camera);
+  game->player_camera.camera.position.z += 1.5f;
 
   // TODO: Look into x flip
   game->render_me = calloc(1, sizeof(struct RenderMe));
   render_me_init(game->render_me, gpu_api, game);
-  game->render_me->me.entity.position = (vec3){.x = -1.5f, .y = -0.5, .z = 0.0f};
+  game->render_me->me.entity.position = (vec3){.x = -3.5f, .y = -1.125, .z = 0.0f};
 
   game->render_wilbur = calloc(1, sizeof(struct RenderWilbur));
   render_wilbur_init(game->render_wilbur, gpu_api, game);
-  game->render_wilbur->wilbur.entity.position = (vec3){.x = 1.0f, .y = -0.75, .z = 0.0f};
+  game->render_wilbur->wilbur.entity.position = (vec3){.x = 0.0f, .y = -0.5, .z = 0.0f};
   game->player_camera.camera.position.x = game->render_wilbur->wilbur.entity.position.x;
   game->player_camera.camera.position.y = game->render_wilbur->wilbur.entity.position.y;
 
@@ -209,4 +210,14 @@ void game_update_input(struct Game* game, struct Engine* engine) {
     if (game->resource_manager.audio_manager.master_volume > 1.0f)
       game->resource_manager.audio_manager.master_volume = 1.0f;
   }
+
+  if (input_manager->keys[GLFW_KEY_Z].state == PRESSED)
+    game->player_camera.camera.position.z += 0.01f;
+  if (input_manager->keys[GLFW_KEY_X].state == PRESSED)
+    game->player_camera.camera.position.z -= 0.01f;
+
+  if (input_manager->keys[GLFW_KEY_E].state == PRESSED)
+    game->player_camera.camera.position.y += 0.01f;
+  if (input_manager->keys[GLFW_KEY_Q].state == PRESSED)
+    game->player_camera.camera.position.y -= 0.01f;
 }

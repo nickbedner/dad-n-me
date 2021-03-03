@@ -11,13 +11,11 @@ int render_scenery_init(struct RenderScenery* render_scenery, struct GPUAPI* gpu
   render_scenery->scenery.entity.render_func = (void (*)(void*, void*))render_scenery_render;
   render_scenery->scenery.entity.recreate_func = (void (*)(void*, void*))render_scenery_recreate;
 
-  float draw_scale = 0.5;
-
   sprite_init(&render_scenery->texture, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, render_scenery->scenery.texture_path));
-  render_scenery->texture.scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
+  render_scenery->texture.scale = (vec3){.x = scenery->entity.scale, .y = scenery->entity.scale, .z = scenery->entity.scale};
 
-  render_scenery->scenery.entity.width = render_scenery->texture.width * draw_scale;
-  render_scenery->scenery.entity.height = render_scenery->texture.height * draw_scale;
+  render_scenery->scenery.entity.width = render_scenery->texture.width * render_scenery->scenery.entity.scale;
+  render_scenery->scenery.entity.height = render_scenery->texture.height * render_scenery->scenery.entity.scale;
 
   return 0;
 }

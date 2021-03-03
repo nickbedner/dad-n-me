@@ -1,20 +1,128 @@
 <gamestage>
 	<scenery>
+		<clouds>
+			<position path="./assets/textures/background/clouds.png">
+				<x>0.0</x>
+				<y>10.0</y>
+				<z>50.0</z>
+			</position>
+			<scale>2.0</scale>
+			<repeat>2</repeat>
+			<offset>0.999</offset>
+		</clouds>
+		<back1>
+			<position path="./assets/textures/background/back2.png">
+				<x>1.0</x>
+				<y>1.0</y>
+				<z>10.0</z>
+			</position>
+			<scale>0.5</scale>
+			<repeat>1</repeat>
+			<offset>1</offset>
+		</back1>
 		<grass>
 			<position path="./assets/textures/floortiles/grass.png">
-				<x>-20.0</x>
+				<x>-4.375</x>
+				<y>-1.615</y>
+				<z>-0.01</z>
+			</position>
+			<scale>0.5</scale>
+			<repeat>1</repeat>
+			<offset>0.99</offset>
+		</grass>
+		<grassshadow>
+			<position path="./assets/textures/floortiles/grassshadow.png">
+				<x>-18.4</x>
+				<y>-1.55</y>
+				<z>-0.01</z>
+			</position>
+			<scale>0.2</scale>
+			<repeat>6</repeat>
+			<offset>0.99</offset>
+		</grassshadow>
+		<street>
+			<position path="./assets/textures/floortiles/street.png">
+				<x>-2.0</x>
 				<y>-1.7</y>
 				<z>0.0</z>
 			</position>
-			<repeat>10</repeat>
-		</grass>
-		<sandbox>
-			<position path="./assets/textures/doodads/sandbox.png">
-				<x>-3.8</x>
-				<y>-1.5</y>
+			<scale>0.2</scale>
+			<repeat>5</repeat>
+			<offset>0.99</offset>
+		</street>
+		<streetgrass>
+			<position path="./assets/textures/floortiles/streetgrass.png">
+				<x>-2.2</x>
+				<y>-0.825</y>
 				<z>-0.01</z>
 			</position>
+			<scale>0.2</scale>
 			<repeat>1</repeat>
-		</sandbox>
+			<offset>1</offset>
+		</streetgrass>
+		<fence>
+			<position path="./assets/textures/environment/fence.png">
+				<x>-2.2</x>
+				<y>0.56</y>
+				<z>-0.02</z>
+			</position>
+			<scale>0.2</scale>
+			<repeat>10</repeat>
+			<offset>0.925</offset>
+		</fence>
+		<woodfence>
+			<position path="./assets/textures/environment/woodfence.png">
+				<x>-15.87</x>
+				<y>0.96</y>
+				<z>0.01</z>
+			</position>
+			<scale>0.2</scale>
+			<repeat>10</repeat>
+			<offset>0.91</offset>
+		</woodfence>
+		<trash>
+			<position path="./assets/textures/doodads/trash.png">
+				<x>-2.86</x>
+				<y>-0.1</y>
+				<z>-0.03</z>
+			</position>
+			<scale>0.2</scale>
+			<repeat>1</repeat>
+			<offset>1</offset>
+		</trash>
+		<trash2>
+			<position path="./assets/textures/doodads/trash2.png">
+				<x>-5.25</x>
+				<y>-0.05</y>
+				<z>-0.03</z>
+			</position>
+			<scale>0.2</scale>
+			<repeat>1</repeat>
+			<offset>1</offset>
+		</trash2>
 	</scenery>
+	<doodads>
+		<sign>
+			<position path="./assets/textures/doodads/sign.png">
+				<x>-3.8</x>
+				<y>0.3</y>
+				<z>-0.04</z>
+			</position>
+			<scale>0.2</scale>
+			<repeat>0</repeat>
+			<offset>1</offset>
+		</sign>
+	</doodads>
+	<foreground>
+		<forewoodfence>
+			<position path="./assets/textures/foreground/forewoodfence.png">
+				<x>-3.8</x>
+				<y>0.3</y>
+				<z>-0.04</z>
+			</position>
+			<scale>0.2</scale>
+			<repeat>0</repeat>
+			<offset>1</offset>
+		</forewoodfence>
+	</foreground>
 </gamestage>

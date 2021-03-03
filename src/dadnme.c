@@ -15,7 +15,7 @@ int dad_n_me_init(struct DadNMe* dad_n_me) {
   // TODO: Load from settings or on first boot do fullscreen and monitor resolution
   // Note: Handy function to get max msaa samples supported by gpu
   //vulkan_renderer_get_max_usable_sample_count(gpu_api)
-  window_init(&dad_n_me->window, &dad_n_me->mana.engine, 1920, 1080, 1);
+  window_init(&dad_n_me->window, &dad_n_me->mana.engine, 1280, 720, 1);
 
   game_init(&dad_n_me->game, &dad_n_me->mana, &dad_n_me->window);
 
