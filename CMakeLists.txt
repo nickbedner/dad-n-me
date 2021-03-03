@@ -27,6 +27,7 @@ set(DAD_N_ME_SERVER_STATIC_LIBRARY ON CACHE BOOL "" FORCE)
 add_subdirectory(lib/dad-n-me-server builddad-n-me-server)
 
 if (WIN32)
+        #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp -qopenmp-link=static")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp")
 endif (WIN32)
 
@@ -59,9 +60,20 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-visibility -Wno-pragma-pack -Wno-deprec
 #        message("Some other build type.")
 #endif()
 
-target_link_libraries(DadnMe 
-        mana
-        DadNMeServer)
+set(DAD_N_ME_BUILD_LIBRARIES
+        DadnMe
+        DadNMeServer 
+        mana)
+
+if (WIN32 AND CMAKE_C_COMPILER_ID MATCHES "Clang")
+        STRING(REPLACE " " "\ " PATH_NO_SPACE "$ENV{ProgramFiles}")
+        set(DAD_N_ME_BUILD_LIBRARIES ${DAD_N_ME_BUILD_LIBRARIES} "${PATH_NO_SPACE}/LLVM/lib/libomp.lib" "${PATH_NO_SPACE}/LLVM/lib/libiomp5md.lib")
+        add_custom_command (TARGET DadnMe POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${PATH_NO_SPACE}/LLVM/bin/libomp.dll ${CMAKE_CURRENT_BINARY_DIR}/libomp.dll)
+endif ()
+
+target_link_libraries(${DAD_N_ME_BUILD_LIBRARIES})
 
 set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/include

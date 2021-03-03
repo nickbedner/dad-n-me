@@ -132,15 +132,15 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
       array_list_swap(&game->stage_entity_render_list, other_entity_num, other_entity_num - 1);
     }
   }
+  // TODO: Implement instanced rendering and texture
+  printf("OMP threads: %d\n", engine_get_max_omp_threads());
   // Render and update scenery
-#pragma omp for
   for (int entity_num = 0; entity_num < array_list_size(&game->scenery_render_list); entity_num++) {
     struct Entity* entity = array_list_get(&game->scenery_render_list, entity_num);
     (*entity->update_func)(entity->entity_data, game, delta_time);
     (*entity->render_func)(entity->entity_data, gpu_api);
   }
-// Render and update sprites
-#pragma omp for
+  // Render and update sprites
   for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_render_list); entity_num++) {
     struct Entity* entity = array_list_get(&game->stage_entity_render_list, entity_num);
     (*entity->update_func)(entity->entity_data, game, delta_time);
