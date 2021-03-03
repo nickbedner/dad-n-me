@@ -1,5 +1,44 @@
 #include "game.h"
 
+static inline game_hotswap_scenery(struct Game* game, struct GPUAPI* gpu_api) {
+  for (int entity_num = 0; entity_num < array_list_size(&game->scenery_render_list); entity_num++) {
+    struct RenderScenery* entity = array_list_get(&game->scenery_render_list, entity_num);
+    render_scenery_delete(entity, gpu_api);
+    free(entity);
+  }
+
+  array_list_clear(&game->scenery_render_list);
+
+  if (game->game_state != NULL) {
+    game_state_delete(game->game_state);
+    free(game->game_state);
+  }
+  game->game_state = calloc(1, sizeof(struct GameState));
+  game_state_init(game->game_state);
+
+  array_list_init(&game->scenery_render_list);
+  for (int scenery_num = 0; scenery_num < array_list_size(&game->game_state->game_stage->scenery_entities); scenery_num++) {
+    struct Scenery* scenery = array_list_get(&game->game_state->game_stage->scenery_entities, scenery_num);
+    for (int repeat_num = 0; repeat_num < scenery->repeat_factor; repeat_num++) {
+      struct RenderScenery* new_scenery = calloc(1, sizeof(struct RenderScenery));
+      render_scenery_init(new_scenery, gpu_api, game, scenery);
+      new_scenery->scenery.entity.position.x = new_scenery->scenery.entity.position.x + ((new_scenery->texture.width * new_scenery->texture.scale.x) * repeat_num) * 0.99f;
+      array_list_add(&game->scenery_render_list, new_scenery);
+    }
+  }
+
+  // Sort scenery by z position
+  for (int entity_num = 0; entity_num < array_list_size(&game->scenery_render_list); entity_num++) {
+    for (int other_entity_num = entity_num; other_entity_num > 0; other_entity_num--) {
+      struct Entity* entity_one = ((struct Entity*)array_list_get(&game->scenery_render_list, other_entity_num));
+      struct Entity* entity_two = ((struct Entity*)array_list_get(&game->scenery_render_list, other_entity_num - 1));
+      if (entity_one->position.z < entity_two->position.z)
+        continue;
+      array_list_swap(&game->scenery_render_list, other_entity_num, other_entity_num - 1);
+    }
+  }
+}
+
 void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   struct GPUAPI* gpu_api = &mana->engine.gpu_api;
   game->window = window;
@@ -19,10 +58,6 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
 
   player_camera_init(&game->player_camera);
 
-  // Get current game state from server
-  game->game_state = calloc(1, sizeof(struct GameState));
-  game_state_init(game->game_state);
-
   // TODO: Look into x flip
   game->render_me = calloc(1, sizeof(struct RenderMe));
   render_me_init(game->render_me, gpu_api, game);
@@ -38,16 +73,9 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   array_list_add(&game->stage_entity_render_list, &game->render_me->me.entity);
   array_list_add(&game->stage_entity_render_list, &game->render_wilbur->wilbur.entity);
 
+  // Get current game state from server
   array_list_init(&game->scenery_render_list);
-  for (int scenery_num = 0; scenery_num < array_list_size(&game->game_state->game_stage->scenery_entities); scenery_num++) {
-    struct Scenery* scenery = array_list_get(&game->game_state->game_stage->scenery_entities, scenery_num);
-    for (int repeat_num = 0; repeat_num < scenery->repeat_factor; repeat_num++) {
-      struct RenderScenery* new_scenery = calloc(1, sizeof(struct RenderScenery));
-      render_scenery_init(new_scenery, gpu_api, game, scenery);
-      new_scenery->scenery.entity.position.x = new_scenery->scenery.entity.position.x + ((new_scenery->texture.width * new_scenery->texture.scale.x) * repeat_num) * 0.99f;
-      array_list_add(&game->scenery_render_list, new_scenery);
-    }
-  }
+  game_hotswap_scenery(game, gpu_api);
 }
 
 void game_delete(struct Game* game, struct Mana* mana) {
@@ -133,7 +161,6 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
     }
   }
   // TODO: Implement instanced rendering and texture
-  printf("OMP threads: %d\n", engine_get_max_omp_threads());
   // Render and update scenery
   for (int entity_num = 0; entity_num < array_list_size(&game->scenery_render_list); entity_num++) {
     struct Entity* entity = array_list_get(&game->scenery_render_list, entity_num);
@@ -167,6 +194,10 @@ void game_update_input(struct Game* game, struct Engine* engine) {
   if (input_manager->keys[GLFW_KEY_1].pushed == 1) {
     game->fxaa_shader.on ^= 1;
     game->fxaa_shader.on ? printf("FXAA ON\n") : printf("FXAA OFF\n");
+  }
+
+  if (input_manager->keys[GLFW_KEY_2].pushed == 1) {
+    game_hotswap_scenery(game, &engine->gpu_api);
   }
 
   if (input_manager->keys[GLFW_KEY_O].pushed == 1) {

@@ -2,19 +2,19 @@
 	<scenery>
 		<grass>
 			<position path="./assets/textures/floortiles/grass.png">
-				<x>-10.0</x>
-				<y>-1.75</y>
+				<x>-20.0</x>
+				<y>-1.7</y>
 				<z>0.0</z>
 			</position>
 			<repeat>10</repeat>
 		</grass>
-		<grass2>
-			<position path="./assets/textures/floortiles/grass.png">
-				<x>14.0</x>
-				<y>-1.75</y>
-				<z>0.0</z>
+		<sandbox>
+			<position path="./assets/textures/doodads/sandbox.png">
+				<x>-3.8</x>
+				<y>-1.5</y>
+				<z>-0.01</z>
 			</position>
-			<repeat>0</repeat>
-		</grass2>
+			<repeat>1</repeat>
+		</sandbox>
 	</scenery>
 </gamestage>
