@@ -1,6 +1,6 @@
 #include "game.h"
 
-static inline game_hotswap_scenery(struct Game* game, struct GPUAPI* gpu_api) {
+static inline void game_hotswap_scenery(struct Game* game, struct GPUAPI* gpu_api) {
   for (int entity_num = 0; entity_num < array_list_size(&game->scenery_render_list); entity_num++) {
     struct RenderScenery* entity = array_list_get(&game->scenery_render_list, entity_num);
     render_scenery_delete(entity, gpu_api);
@@ -16,7 +16,6 @@ static inline game_hotswap_scenery(struct Game* game, struct GPUAPI* gpu_api) {
   game->game_state = calloc(1, sizeof(struct GameState));
   game_state_init(game->game_state);
 
-  array_list_init(&game->scenery_render_list);
   for (int scenery_num = 0; scenery_num < array_list_size(&game->game_state->game_stage->scenery_entities); scenery_num++) {
     struct Scenery* scenery = array_list_get(&game->game_state->game_stage->scenery_entities, scenery_num);
     for (int repeat_num = 0; repeat_num < scenery->repeat_factor; repeat_num++) {
@@ -160,7 +159,7 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
       array_list_swap(&game->stage_entity_render_list, other_entity_num, other_entity_num - 1);
     }
   }
-  // TODO: Implement instanced rendering and texture
+  // TODO: Implement instanced rendering and texture atlas
   // Render and update scenery
   for (int entity_num = 0; entity_num < array_list_size(&game->scenery_render_list); entity_num++) {
     struct Entity* entity = array_list_get(&game->scenery_render_list, entity_num);

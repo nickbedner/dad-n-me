@@ -60,24 +60,33 @@ void render_wilbur_update(struct RenderWilbur* render_wilbur, struct Game* game,
 
   wilbur->state = WILBUR_IDLE_STATE;
 
-  if (input_manager->keys[GLFW_KEY_A].state == PRESSED) {
-    wilbur->state = WILBUR_WALKING_STATE;
-    wilbur->entity.direction = -1.0f;
-    wilbur->entity.position.x += 3.5f * delta_time;
-  }
-  if (input_manager->keys[GLFW_KEY_D].state == PRESSED) {
-    wilbur->state = WILBUR_WALKING_STATE;
-    wilbur->entity.direction = 1.0f;
-    wilbur->entity.position.x -= 3.5f * delta_time;
+  if (input_manager->keys[GLFW_KEY_A].state == PRESSED && input_manager->keys[GLFW_KEY_D].state == PRESSED)
+    wilbur->state = WILBUR_IDLE_STATE;
+  else {
+    if (input_manager->keys[GLFW_KEY_A].state == PRESSED) {
+      wilbur->state = WILBUR_WALKING_STATE;
+      wilbur->entity.direction = -1.0f;
+      wilbur->entity.position.x += 3.5f * delta_time;
+    }
+    if (input_manager->keys[GLFW_KEY_D].state == PRESSED) {
+      wilbur->state = WILBUR_WALKING_STATE;
+      wilbur->entity.direction = 1.0f;
+      wilbur->entity.position.x -= 3.5f * delta_time;
+    }
   }
 
-  if (input_manager->keys[GLFW_KEY_W].state == PRESSED) {
-    wilbur->state = WILBUR_WALKING_STATE;
-    wilbur->entity.position.y += 2.0f * delta_time;
-  }
-  if (input_manager->keys[GLFW_KEY_S].state == PRESSED) {
-    wilbur->state = WILBUR_WALKING_STATE;
-    wilbur->entity.position.y -= 2.0f * delta_time;
+  if (input_manager->keys[GLFW_KEY_W].state == PRESSED && input_manager->keys[GLFW_KEY_S].state == PRESSED &&
+      input_manager->keys[GLFW_KEY_A].state != PRESSED && input_manager->keys[GLFW_KEY_D].state != PRESSED)
+    wilbur->state = WILBUR_IDLE_STATE;
+  else {
+    if (input_manager->keys[GLFW_KEY_W].state == PRESSED) {
+      wilbur->state = WILBUR_WALKING_STATE;
+      wilbur->entity.position.y += 2.0f * delta_time;
+    }
+    if (input_manager->keys[GLFW_KEY_S].state == PRESSED) {
+      wilbur->state = WILBUR_WALKING_STATE;
+      wilbur->entity.position.y -= 2.0f * delta_time;
+    }
   }
 
   if (glfwJoystickIsGamepad(GLFW_JOYSTICK_1)) {
