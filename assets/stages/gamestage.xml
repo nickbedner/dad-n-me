@@ -100,6 +100,16 @@
 			<repeat>1</repeat>
 			<offset>1</offset>
 		</trash2>
+		<sign2>
+			<position path="./assets/textures/doodads/sign2.png">
+				<x>-1.35</x>
+				<y>1.15</y>
+				<z>0.03</z>
+			</position>
+			<scale>0.2</scale>
+			<repeat>1</repeat>
+			<offset>1</offset>
+		</sign2>
 	</scenery>
 	<doodads>
 		<sign>
