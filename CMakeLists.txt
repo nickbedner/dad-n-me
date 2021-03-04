@@ -126,4 +126,8 @@ add_custom_target(Assets ALL
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/lib/mana/assets ${PROJECT_BINARY_DIR}/assets
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/assets)
 
+if(WIN32)
+        target_sources(DadnMe PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/utilities/icon.rc)
+endif()
+
 add_dependencies(DadnMe Assets)

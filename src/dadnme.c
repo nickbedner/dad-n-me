@@ -16,6 +16,7 @@ int dad_n_me_init(struct DadNMe* dad_n_me) {
   // Note: Handy function to get max msaa samples supported by gpu
   //vulkan_renderer_get_max_usable_sample_count(gpu_api)
   window_init(&dad_n_me->window, &dad_n_me->mana.engine, 1280, 720, 1);
+  window_set_icon(&dad_n_me->window, "./assets/textures/etc/icon.png");
 
   game_init(&dad_n_me->game, &dad_n_me->mana, &dad_n_me->window);
 
