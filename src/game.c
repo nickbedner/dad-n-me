@@ -77,7 +77,7 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   array_list_init(&game->scenery_render_list);
   game_hotswap_scenery(game, gpu_api);
 
-  game->resource_manager.audio_manager.master_volume = 0.0f;
+  //game->resource_manager.audio_manager.master_volume = 0.0f;
 }
 
 void game_delete(struct Game* game, struct Mana* mana) {

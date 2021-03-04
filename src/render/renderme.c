@@ -104,7 +104,7 @@ void render_me_update(struct RenderMe* render_me, struct Game* game, float delta
     }
   }*/
 
-  if (me->entity.direction > 0.0f)
+  if (me->entity.direction < 0.0f)
     render_me->shadow.position = (vec3){.x = me->entity.position.x + 0.05f, .y = me->entity.position.y - 0.65f, render_me->shadow.position.z};
   else
     render_me->shadow.position = (vec3){.x = me->entity.position.x - 0.05f, .y = me->entity.position.y - 0.65f, render_me->shadow.position.z};

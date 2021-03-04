@@ -106,7 +106,7 @@ void render_wilbur_update(struct RenderWilbur* render_wilbur, struct Game* game,
   else if (wilbur->entity.position.y < -2.7)
     wilbur->entity.position.y = -2.7f;
 
-  if (wilbur->entity.direction > 0.0f)
+  if (wilbur->entity.direction < 0.0f)
     render_wilbur->shadow.position = (vec3){.x = wilbur->entity.position.x + 0.05f, .y = wilbur->entity.position.y - 0.65f, render_wilbur->shadow.position.z};
   else
     render_wilbur->shadow.position = (vec3){.x = wilbur->entity.position.x - 0.05f, .y = wilbur->entity.position.y - 0.65f, render_wilbur->shadow.position.z};
