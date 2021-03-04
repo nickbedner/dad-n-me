@@ -4,7 +4,7 @@
 			<position path="./assets/textures/background/clouds.png">
 				<x>0.0</x>
 				<y>10.0</y>
-				<z>50.0</z>
+				<z>-50.0</z>
 			</position>
 			<scale>2.0</scale>
 			<repeat>2</repeat>
@@ -12,9 +12,9 @@
 		</clouds>
 		<back1>
 			<position path="./assets/textures/background/back2.png">
-				<x>1.0</x>
+				<x>0.0</x>
 				<y>1.0</y>
-				<z>10.0</z>
+				<z>-10.0</z>
 			</position>
 			<scale>0.5</scale>
 			<repeat>1</repeat>
@@ -22,7 +22,7 @@
 		</back1>
 		<grass>
 			<position path="./assets/textures/floortiles/grass.png">
-				<x>-4.375</x>
+				<x>5.65</x>
 				<y>-1.615</y>
 				<z>-0.01</z>
 			</position>
@@ -32,17 +32,17 @@
 		</grass>
 		<grassshadow>
 			<position path="./assets/textures/floortiles/grassshadow.png">
-				<x>-18.4</x>
+				<x>8.035</x>
 				<y>-1.55</y>
 				<z>-0.01</z>
 			</position>
 			<scale>0.2</scale>
 			<repeat>6</repeat>
-			<offset>0.99</offset>
+			<offset>0.98</offset>
 		</grassshadow>
 		<street>
 			<position path="./assets/textures/floortiles/street.png">
-				<x>-2.0</x>
+				<x>-6.19</x>
 				<y>-1.7</y>
 				<z>0.0</z>
 			</position>
@@ -52,9 +52,9 @@
 		</street>
 		<streetgrass>
 			<position path="./assets/textures/floortiles/streetgrass.png">
-				<x>-2.2</x>
+				<x>3.5</x>
 				<y>-0.825</y>
-				<z>-0.01</z>
+				<z>0.01</z>
 			</position>
 			<scale>0.2</scale>
 			<repeat>1</repeat>
@@ -62,9 +62,9 @@
 		</streetgrass>
 		<fence>
 			<position path="./assets/textures/environment/fence.png">
-				<x>-2.2</x>
+				<x>-7.25</x>
 				<y>0.56</y>
-				<z>-0.02</z>
+				<z>0.02</z>
 			</position>
 			<scale>0.2</scale>
 			<repeat>10</repeat>
@@ -72,9 +72,9 @@
 		</fence>
 		<woodfence>
 			<position path="./assets/textures/environment/woodfence.png">
-				<x>-15.87</x>
+				<x>7.4</x>
 				<y>0.96</y>
-				<z>0.01</z>
+				<z>-0.02</z>
 			</position>
 			<scale>0.2</scale>
 			<repeat>10</repeat>
@@ -82,9 +82,9 @@
 		</woodfence>
 		<trash>
 			<position path="./assets/textures/doodads/trash.png">
-				<x>-2.86</x>
+				<x>4.175</x>
 				<y>-0.1</y>
-				<z>-0.03</z>
+				<z>0.03</z>
 			</position>
 			<scale>0.2</scale>
 			<repeat>1</repeat>
@@ -92,9 +92,9 @@
 		</trash>
 		<trash2>
 			<position path="./assets/textures/doodads/trash2.png">
-				<x>-5.25</x>
+				<x>6.8</x>
 				<y>-0.05</y>
-				<z>-0.03</z>
+				<z>0.03</z>
 			</position>
 			<scale>0.2</scale>
 			<repeat>1</repeat>
@@ -102,9 +102,9 @@
 		</trash2>
 		<sign2>
 			<position path="./assets/textures/doodads/sign2.png">
-				<x>-1.35</x>
+				<x>2.65</x>
 				<y>1.15</y>
-				<z>0.03</z>
+				<z>-0.01</z>
 			</position>
 			<scale>0.2</scale>
 			<repeat>1</repeat>
@@ -114,7 +114,7 @@
 	<doodads>
 		<sign>
 			<position path="./assets/textures/doodads/sign.png">
-				<x>-3.8</x>
+				<x>-3.75</x>
 				<y>0.3</y>
 				<z>-0.04</z>
 			</position>

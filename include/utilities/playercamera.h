@@ -4,16 +4,19 @@
 
 #include <mana/core/memoryallocator.h>
 //
+#include <entities/entity.h>
 #include <mana/graphics/utilities/camera.h>
 #include <mana/mana.h>
 
 struct PlayerCamera {
   struct Camera camera;
+  struct Entity* focus_entity;
 
   float max_camera_velocity;
   float camera_left_right_velocity;
   float camera_in_out_velocity;
   float camera_up_down_velocity;
+  float y_find;
 };
 
 int player_camera_init(struct PlayerCamera* player_camera);

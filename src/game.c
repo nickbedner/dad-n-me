@@ -31,7 +31,7 @@ static inline void game_hotswap_scenery(struct Game* game, struct GPUAPI* gpu_ap
     for (int other_entity_num = entity_num; other_entity_num > 0; other_entity_num--) {
       struct Entity* entity_one = ((struct Entity*)array_list_get(&game->scenery_render_list, other_entity_num));
       struct Entity* entity_two = ((struct Entity*)array_list_get(&game->scenery_render_list, other_entity_num - 1));
-      if (entity_one->position.z < entity_two->position.z)
+      if (entity_one->position.z > entity_two->position.z)
         continue;
       array_list_swap(&game->scenery_render_list, other_entity_num, other_entity_num - 1);
     }
@@ -56,7 +56,6 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api, 0);
 
   player_camera_init(&game->player_camera);
-  game->player_camera.camera.position.z += 1.5f;
 
   // TODO: Look into x flip
   game->render_me = calloc(1, sizeof(struct RenderMe));
@@ -66,6 +65,7 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   game->render_wilbur = calloc(1, sizeof(struct RenderWilbur));
   render_wilbur_init(game->render_wilbur, gpu_api, game);
   game->render_wilbur->wilbur.entity.position = (vec3){.x = 0.0f, .y = -0.5, .z = 0.0f};
+  game->player_camera.focus_entity = &game->render_wilbur->wilbur.entity;
   game->player_camera.camera.position.x = game->render_wilbur->wilbur.entity.position.x;
   game->player_camera.camera.position.y = game->render_wilbur->wilbur.entity.position.y;
 
@@ -76,6 +76,8 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   // Get current game state from server
   array_list_init(&game->scenery_render_list);
   game_hotswap_scenery(game, gpu_api);
+
+  game->resource_manager.audio_manager.master_volume = 0.0f;
 }
 
 void game_delete(struct Game* game, struct Mana* mana) {
@@ -116,7 +118,7 @@ void game_delete(struct Game* game, struct Mana* mana) {
 
 void game_update(struct Game* game, struct Mana* mana, double delta_time) {
   struct GPUAPI* gpu_api = &mana->engine.gpu_api;
-  // When the window is resized everything must be recreated in vulkan
+  // Note: When the window is resized everything must be recreated in vulkan
   if (mana->engine.gpu_api.vulkan_state->reset_shaders) {
     mana->engine.gpu_api.vulkan_state->reset_shaders = 0;
     vkDeviceWaitIdle(mana->engine.gpu_api.vulkan_state->device);
@@ -196,9 +198,14 @@ void game_update_input(struct Game* game, struct Engine* engine) {
     game->fxaa_shader.on ? printf("FXAA ON\n") : printf("FXAA OFF\n");
   }
 
-  if (input_manager->keys[GLFW_KEY_2].pushed == 1) {
+  if (input_manager->keys[GLFW_KEY_2].pushed == 1)
     game_hotswap_scenery(game, &engine->gpu_api);
-  }
+
+  if (input_manager->keys[GLFW_KEY_3].pushed == 1)
+    game->player_camera.focus_entity = &game->render_me->me.entity;
+
+  if (input_manager->keys[GLFW_KEY_4].pushed == 1)
+    game->player_camera.focus_entity = &game->render_wilbur->wilbur.entity;
 
   if (input_manager->keys[GLFW_KEY_O].pushed == 1) {
     game->resource_manager.audio_manager.master_volume -= 0.1f;

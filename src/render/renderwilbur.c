@@ -11,6 +11,8 @@ int render_wilbur_init(struct RenderWilbur* render_wilbur, struct GPUAPI* gpu_ap
 
   float draw_scale = 0.2;
 
+  render_wilbur->wilbur.entity.direction = 1.0f;
+
   sprite_init(&render_wilbur->shadow, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, "./assets/textures/characters/shadow.png"));
   render_wilbur->shadow.position = (vec3){.x = -2.3f, .y = 0.45f, .z = -0.002f};
   render_wilbur->shadow.scale = (vec3){.x = draw_scale, .y = draw_scale, .z = draw_scale};
@@ -44,11 +46,6 @@ void render_wilbur_update(struct RenderWilbur* render_wilbur, struct Game* game,
   struct InputManager* input_manager = game->window->input_manager;
   struct Wilbur* wilbur = &render_wilbur->wilbur;
 
-  // TODO: Switch to focus on object instead of hard coded character
-  float camera_mov_diff = (game->player_camera.camera.position.x - wilbur->entity.position.x) * 4.0f * delta_time;
-
-  game->player_camera.camera.position.x -= camera_mov_diff;
-
   wilbur->state = WILBUR_IDLE_STATE;
 
   if (input_manager->keys[GLFW_KEY_A].state == PRESSED && input_manager->keys[GLFW_KEY_D].state == PRESSED)
@@ -57,12 +54,12 @@ void render_wilbur_update(struct RenderWilbur* render_wilbur, struct Game* game,
     if (input_manager->keys[GLFW_KEY_A].state == PRESSED) {
       wilbur->state = WILBUR_WALKING_STATE;
       wilbur->entity.direction = -1.0f;
-      wilbur->entity.position.x += 3.5f * delta_time;
+      wilbur->entity.position.x -= 3.5f * delta_time;
     }
     if (input_manager->keys[GLFW_KEY_D].state == PRESSED) {
       wilbur->state = WILBUR_WALKING_STATE;
       wilbur->entity.direction = 1.0f;
-      wilbur->entity.position.x -= 3.5f * delta_time;
+      wilbur->entity.position.x += 3.5f * delta_time;
     }
   }
 
@@ -91,21 +88,23 @@ void render_wilbur_update(struct RenderWilbur* render_wilbur, struct Game* game,
       else {
         wilbur->state = WILBUR_WALKING_STATE;
         wilbur->entity.direction = left_x_axis;
-        wilbur->entity.position.x -= left_x_axis * 0.025f;
+        wilbur->entity.position.x += left_x_axis * 3.5f * delta_time;
       }
 
       if (fabs(left_y_axis) < 0.25f)
         left_y_axis = 0.0f;
       else {
         wilbur->state = WILBUR_WALKING_STATE;
-        wilbur->entity.position.y -= left_y_axis * 0.015f;
+        wilbur->entity.position.y -= left_y_axis * 2.0f * delta_time;
       }
     }
   }
 
-  // TODO: Yucky hardcoded top bounds
-  if (wilbur->entity.position.y > 0.4)
-    wilbur->entity.position.y = 0.4f;
+  // TODO: Yucky hardcoded bounds
+  if (wilbur->entity.position.y > 0.5)
+    wilbur->entity.position.y = 0.5f;
+  else if (wilbur->entity.position.y < -2.7)
+    wilbur->entity.position.y = -2.7f;
 
   if (wilbur->entity.direction > 0.0f)
     render_wilbur->shadow.position = (vec3){.x = wilbur->entity.position.x + 0.05f, .y = wilbur->entity.position.y - 0.65f, render_wilbur->shadow.position.z};

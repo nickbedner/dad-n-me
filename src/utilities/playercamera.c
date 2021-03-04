@@ -2,9 +2,10 @@
 
 int player_camera_init(struct PlayerCamera* player_camera) {
   camera_init(&player_camera->camera);
-  vec3 added_pos = vec3_scale(player_camera->camera.front, 8);
+  vec3 added_pos = vec3_scale(player_camera->camera.front, -6.9f);
   player_camera->camera.position = vec3_add(player_camera->camera.position, added_pos);
-  player_camera->camera.yaw += 180;
+  // Note: Camera and player y starts at -0.5
+  player_camera->y_find = -0.5f;  //player_camera->camera.position.y;
 
   player_camera->max_camera_velocity = 0.024f;
   player_camera->camera_left_right_velocity = 0.0f;
@@ -15,9 +16,15 @@ int player_camera_init(struct PlayerCamera* player_camera) {
 }
 
 void player_camera_update(struct PlayerCamera* player_camera, float delta_time) {
-  //player_camera->camera_left_right_velocity *= 0.98f;
-  //player_camera->camera_in_out_velocity *= 0.98f;
-  //player_camera->camera_up_down_velocity *= 0.98f;
+  float camera_mov_diff_x = (player_camera->camera.position.x - player_camera->focus_entity->position.x) * 4.0f * delta_time;
+  player_camera->camera.position.x -= camera_mov_diff_x;
+  float camera_mov_diff_y = (player_camera->camera.position.y - player_camera->y_find) * 4.0f * delta_time;
+  player_camera->camera.position.y -= camera_mov_diff_y;
+
+  if (player_camera->focus_entity->position.y > -0.5)
+    player_camera->y_find = player_camera->focus_entity->position.y;
+  else
+    player_camera->y_find = -0.5f;
 
   camera_update_vectors(&player_camera->camera);
 }
