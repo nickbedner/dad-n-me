@@ -22,9 +22,7 @@ int job_worker_process_tasks(void *a_arg) {
     struct Queue *task_queue = &job_worker->task_queue;
     if (queue_empty(task_queue) == 0) {
       struct Job *job = queue_pop(task_queue);
-      (job->job_func)(job->job_type, job->job_data);
-      printf("Did job in thread: %d!\n", job_worker->thread_num);
-      free(job);
+      (job->job_func)(job->job_data);
     } else
       job_worker_stop_thread(job_worker);
   }
@@ -41,9 +39,9 @@ void job_worker_start_thread(struct JobWorker *job_worker) {
 
 void job_worker_stop_thread(struct JobWorker *job_worker) {
   mtx_lock(&job_worker->mutex);
+  job_worker->run_thread = 0;
   while (job_worker->run_thread == 0)
     cnd_wait(&job_worker->condition, &job_worker->mutex);
-  job_worker->run_thread = 0;
   mtx_unlock(&job_worker->mutex);
 }
 
@@ -65,6 +63,8 @@ int job_system_delete(struct JobSystem *job_system) {
     job_worker_delete(&job_system->workers[worker_num]);
 
   free(job_system->workers);
+
+  return 0;
 }
 
 void job_system_enqueue(struct JobSystem *job_system, struct Job *job) {
@@ -83,9 +83,8 @@ void job_system_start_threads(struct JobSystem *job_system) {
 
 void job_system_wait(struct JobSystem *job_system) {
   for (int worker_num = 0; worker_num < job_system->num_workers; worker_num++) {
-    if (queue_size(&job_system->workers[worker_num].task_queue) > 0) {
-      sleep(1);
-      worker_num = 0;
+    if (job_system->workers[worker_num].run_thread == 1) {
+      worker_num--;
     }
   }
 }

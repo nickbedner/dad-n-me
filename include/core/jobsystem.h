@@ -10,8 +10,7 @@
 #include "game.h"
 
 struct Job {
-  void (*job_func)(void*, void*);  // Type, Data
-  void* job_type;
+  void (*job_func)(void*);
   void* job_data;
 };
 

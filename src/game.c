@@ -38,10 +38,6 @@ static inline void game_hotswap_scenery(struct Game* game, struct GPUAPI* gpu_ap
   }
 }
 
-void do_nothing(void* doing, void* nothing) {
-  asm("nop");
-}
-
 void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   struct GPUAPI* gpu_api = &mana->engine.gpu_api;
   game->window = window;
@@ -53,13 +49,6 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
 
   game->job_system = calloc(1, sizeof(struct JobSystem));
   job_system_init(game->job_system, game);
-  for (int add_jobs = 0; add_jobs < 100; add_jobs++) {
-    struct Job* test_job = malloc(sizeof(struct Job));
-    *test_job = (struct Job){.job_func = do_nothing, .job_type = NULL, .job_data = NULL};
-    job_system_enqueue(game->job_system, test_job);
-  }
-  job_system_start_threads(game->job_system);
-  job_system_wait(game->job_system);
 
   audio_clip_init(&game->music_clip, resource_manager->music_clip_cache, MUSIC_AUDIO_CLIP, 1, 0.75f, 0.025f);
   audio_manager_play_audio_clip(&resource_manager->audio_manager, &game->music_clip);
@@ -177,19 +166,44 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
       array_list_swap(&game->stage_entity_render_list, other_entity_num, other_entity_num - 1);
     }
   }
-  // TODO: Implement instanced rendering and texture atlas
-  // Render and update scenery
 
-  // Enqueue update jobs to threads, start threads, wait in main threads for workers threads to finish
+  // Update scenery
+  struct EntityUpdateData* scenery_update_data_pool = malloc(sizeof(struct EntityUpdateData) * array_list_size(&game->scenery_render_list));
+  struct Job* scenery_update_job_pool = malloc(sizeof(struct Job) * array_list_size(&game->scenery_render_list));
   for (int entity_num = 0; entity_num < array_list_size(&game->scenery_render_list); entity_num++) {
     struct Entity* entity = array_list_get(&game->scenery_render_list, entity_num);
-    (*entity->update_func)(entity->entity_data, game, delta_time);
-    (*entity->render_func)(entity->entity_data, gpu_api);
+
+    scenery_update_data_pool[entity_num] = (struct EntityUpdateData){.game_handle = game, .entity_handle = entity, .delta_time = delta_time};
+    scenery_update_job_pool[entity_num] = (struct Job){.job_func = entity_update_job, .job_data = &scenery_update_data_pool[entity_num]};
+    job_system_enqueue(game->job_system, &scenery_update_job_pool[entity_num]);
   }
-  // Render and update sprites
+  // Update sprites
+  struct EntityUpdateData* sprites_update_data_pool = malloc(sizeof(struct EntityUpdateData) * array_list_size(&game->stage_entity_render_list));
+  struct Job* sprites_update_job_pool = malloc(sizeof(struct Job) * array_list_size(&game->stage_entity_render_list));
   for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_render_list); entity_num++) {
     struct Entity* entity = array_list_get(&game->stage_entity_render_list, entity_num);
-    (*entity->update_func)(entity->entity_data, game, delta_time);
+
+    sprites_update_data_pool[entity_num] = (struct EntityUpdateData){.game_handle = game, .entity_handle = entity, .delta_time = delta_time};
+    sprites_update_job_pool[entity_num] = (struct Job){.job_func = entity_update_job, .job_data = &sprites_update_data_pool[entity_num]};
+    job_system_enqueue(game->job_system, &sprites_update_job_pool[entity_num]);
+  }
+  job_system_start_threads(game->job_system);
+  job_system_wait(game->job_system);
+
+  free(scenery_update_data_pool);
+  free(scenery_update_job_pool);
+  free(sprites_update_data_pool);
+  free(sprites_update_job_pool);
+
+  // TODO: Implement instanced rendering and texture atlas
+  // Render scenery
+  for (int entity_num = 0; entity_num < array_list_size(&game->scenery_render_list); entity_num++) {
+    struct Entity* entity = array_list_get(&game->scenery_render_list, entity_num);
+    (*entity->render_func)(entity->entity_data, gpu_api);
+  }
+  // Render sprites
+  for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_render_list); entity_num++) {
+    struct Entity* entity = array_list_get(&game->stage_entity_render_list, entity_num);
     (*entity->render_func)(entity->entity_data, gpu_api);
   }
 
