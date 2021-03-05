@@ -16,6 +16,7 @@
 #include <mana/graphics/utilities/spriteanimation.h>
 #include <mana/mana.h>
 
+#include "core/jobsystem.h"
 #include "render/renderme.h"
 #include "render/renderscenery.h"
 #include "render/renderwilbur.h"
@@ -24,6 +25,8 @@
 
 struct Game {
   struct Window* window;
+
+  struct JobSystem* job_system;
 
   struct SpriteShader sprite_shader;
   struct SpriteAnimationShader sprite_animation_shader;

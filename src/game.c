@@ -38,6 +38,10 @@ static inline void game_hotswap_scenery(struct Game* game, struct GPUAPI* gpu_ap
   }
 }
 
+void do_nothing(void* doing, void* nothing) {
+  asm("nop");
+}
+
 void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   struct GPUAPI* gpu_api = &mana->engine.gpu_api;
   game->window = window;
@@ -46,6 +50,16 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
 
   resource_manager_init(&game->resource_manager, gpu_api);
   struct ResourceManager* resource_manager = &game->resource_manager;
+
+  game->job_system = calloc(1, sizeof(struct JobSystem));
+  job_system_init(game->job_system, game);
+  for (int add_jobs = 0; add_jobs < 100; add_jobs++) {
+    struct Job* test_job = malloc(sizeof(struct Job));
+    *test_job = (struct Job){.job_func = do_nothing, .job_type = NULL, .job_data = NULL};
+    job_system_enqueue(game->job_system, test_job);
+  }
+  job_system_start_threads(game->job_system);
+  job_system_wait(game->job_system);
 
   audio_clip_init(&game->music_clip, resource_manager->music_clip_cache, MUSIC_AUDIO_CLIP, 1, 0.75f, 0.025f);
   audio_manager_play_audio_clip(&resource_manager->audio_manager, &game->music_clip);
@@ -57,7 +71,6 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
 
   player_camera_init(&game->player_camera);
 
-  // TODO: Look into x flip
   game->render_me = calloc(1, sizeof(struct RenderMe));
   render_me_init(game->render_me, gpu_api, game);
   game->render_me->me.entity.position = (vec3){.x = -3.5f, .y = -1.125, .z = 0.0f};
@@ -77,16 +90,15 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   array_list_init(&game->scenery_render_list);
   game_hotswap_scenery(game, gpu_api);
 
-  //game->resource_manager.audio_manager.master_volume = 0.0f;
+  game->resource_manager.audio_manager.master_volume = 0.0f;
 }
 
 void game_delete(struct Game* game, struct Mana* mana) {
   struct GPUAPI* gpu_api = &mana->engine.gpu_api;
-  struct ResourceManager* resource_manager = &game->resource_manager;
-  // Wait for command buffers to finish before deleting desciptor sets
+  // Note: Wait for command buffers to finish before deleting desciptor sets
   vkWaitForFences(gpu_api->vulkan_state->device, 2, gpu_api->vulkan_state->swap_chain->in_flight_fences, VK_TRUE, UINT64_MAX);
 
-  texture_cache_delete(&resource_manager->texture_cache, gpu_api);
+  texture_cache_delete(&game->resource_manager.texture_cache, gpu_api);
 
   for (int entity_num = 0; entity_num < array_list_size(&game->scenery_render_list); entity_num++) {
     struct RenderScenery* entity = array_list_get(&game->scenery_render_list, entity_num);
@@ -112,6 +124,9 @@ void game_delete(struct Game* game, struct Mana* mana) {
   sprite_shader_delete(&game->sprite_shader, gpu_api);
 
   fxaa_shader_delete(&game->fxaa_shader, gpu_api);
+
+  job_system_delete(game->job_system);
+  free(game->job_system);
 
   resource_manager_delete(&game->resource_manager);
 }
@@ -164,6 +179,8 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
   }
   // TODO: Implement instanced rendering and texture atlas
   // Render and update scenery
+
+  // Enqueue update jobs to threads, start threads, wait in main threads for workers threads to finish
   for (int entity_num = 0; entity_num < array_list_size(&game->scenery_render_list); entity_num++) {
     struct Entity* entity = array_list_get(&game->scenery_render_list, entity_num);
     (*entity->update_func)(entity->entity_data, game, delta_time);
