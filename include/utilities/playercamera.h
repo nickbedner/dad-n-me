@@ -4,7 +4,7 @@
 
 #include <mana/core/memoryallocator.h>
 //
-#include <entities/entity.h>
+#include <core/entity.h>
 #include <mana/graphics/utilities/camera.h>
 #include <mana/mana.h>
 

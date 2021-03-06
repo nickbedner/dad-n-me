@@ -16,15 +16,15 @@ int player_camera_init(struct PlayerCamera* player_camera) {
 }
 
 void player_camera_update(struct PlayerCamera* player_camera, float delta_time) {
-  float camera_mov_diff_x = (player_camera->camera.position.x - player_camera->focus_entity->position.x) * 4.0f * delta_time;
-  player_camera->camera.position.x -= camera_mov_diff_x;
-  float camera_mov_diff_y = (player_camera->camera.position.y - player_camera->y_find) * 4.0f * delta_time;
-  player_camera->camera.position.y -= camera_mov_diff_y;
+  //float camera_mov_diff_x = (player_camera->camera.position.x - player_camera->focus_entity->position.x) * 4.0f * delta_time;
+  //player_camera->camera.position.x -= camera_mov_diff_x;
+  //float camera_mov_diff_y = (player_camera->camera.position.y - player_camera->y_find) * 4.0f * delta_time;
+  //player_camera->camera.position.y -= camera_mov_diff_y;
 
-  if (player_camera->focus_entity->position.y > -0.5)
-    player_camera->y_find = player_camera->focus_entity->position.y;
-  else
-    player_camera->y_find = -0.5f;
+  //if (player_camera->focus_entity->position.y > -0.5)
+  //  player_camera->y_find = player_camera->focus_entity->position.y;
+  //else
+  //  player_camera->y_find = -0.5f;
 
   camera_update_vectors(&player_camera->camera);
 }

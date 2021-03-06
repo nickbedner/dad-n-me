@@ -83,8 +83,7 @@ void job_system_start_threads(struct JobSystem *job_system) {
 
 void job_system_wait(struct JobSystem *job_system) {
   for (int worker_num = 0; worker_num < job_system->num_workers; worker_num++) {
-    if (job_system->workers[worker_num].run_thread == 1) {
+    if (job_system->workers[worker_num].run_thread == 1)
       worker_num--;
-    }
   }
 }

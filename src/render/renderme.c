@@ -1,4 +1,4 @@
-#include "render/renderme.h"
+/*#include "render/renderme.h"
 
 int render_me_init(struct RenderMe* render_me, struct GPUAPI* gpu_api, struct Game* game) {
   me_init(&render_me->me, game->game_state);
@@ -102,27 +102,27 @@ void render_me_update(struct RenderMe* render_me, struct Game* game, float delta
         me->entity.position.y -= left_y_axis * 0.015f;
       }
     }
-  }*/
-
-  if (me->entity.direction < 0.0f)
-    render_me->shadow.position = (vec3){.x = me->entity.position.x + 0.05f, .y = me->entity.position.y - 0.65f, render_me->shadow.position.z};
-  else
-    render_me->shadow.position = (vec3){.x = me->entity.position.x - 0.05f, .y = me->entity.position.y - 0.65f, render_me->shadow.position.z};
-
-  switch (me->state) {
-    case (ME_IDLE_STATE):
-      render_me->standing_animation.direction = me->entity.direction;
-      sprite_animation_update(&render_me->standing_animation, delta_time);
-      render_me->standing_animation.position.x = me->entity.position.x;
-      render_me->standing_animation.position.y = me->entity.position.y;
-      break;
-    case (ME_WALKING_STATE):
-      render_me->walking_animation.direction = me->entity.direction;
-      sprite_animation_update(&render_me->walking_animation, delta_time);
-      render_me->walking_animation.position.x = me->entity.position.x;
-      render_me->walking_animation.position.y = me->entity.position.y;
-      break;
   }
+
+if (me->entity.direction < 0.0f)
+  render_me->shadow.position = (vec3){.x = me->entity.position.x + 0.05f, .y = me->entity.position.y - 0.65f, render_me->shadow.position.z};
+else
+  render_me->shadow.position = (vec3){.x = me->entity.position.x - 0.05f, .y = me->entity.position.y - 0.65f, render_me->shadow.position.z};
+
+switch (me->state) {
+  case (ME_IDLE_STATE):
+    render_me->standing_animation.direction = me->entity.direction;
+    sprite_animation_update(&render_me->standing_animation, delta_time);
+    render_me->standing_animation.position.x = me->entity.position.x;
+    render_me->standing_animation.position.y = me->entity.position.y;
+    break;
+  case (ME_WALKING_STATE):
+    render_me->walking_animation.direction = me->entity.direction;
+    sprite_animation_update(&render_me->walking_animation, delta_time);
+    render_me->walking_animation.position.x = me->entity.position.x;
+    render_me->walking_animation.position.y = me->entity.position.y;
+    break;
+}
 }
 
 void render_me_render(struct RenderMe* render_me, struct GPUAPI* gpu_api) {
@@ -151,3 +151,4 @@ void render_me_recreate(struct RenderMe* render_me, struct GPUAPI* gpu_api) {
   sprite_animation_recreate(&render_me->standing_animation, gpu_api);
   sprite_animation_recreate(&render_me->walking_animation, gpu_api);
 }
+*/

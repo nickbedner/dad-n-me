@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #ifndef RENDER_WILBUR_H
 #define RENDER_WILBUR_H
 
@@ -30,3 +30,4 @@ void render_wilbur_update_uniforms(struct RenderWilbur* render_wilbur, struct GP
 void render_wilbur_recreate(struct RenderWilbur* render_wilbur, struct GPUAPI* gpu_api);
 
 #endif  // RENDER_WILBUR_H
+*/

@@ -1,4 +1,4 @@
-#include "render/renderscenery.h"
+/*#include "render/renderscenery.h"
 
 int render_scenery_init(struct RenderScenery* render_scenery, struct GPUAPI* gpu_api, struct Game* game, struct Scenery* scenery) {
   //scenery_init(&render_scenery->scenery, game->game_state);
@@ -43,4 +43,4 @@ void render_scenery_update_uniforms(struct RenderScenery* render_scenery, struct
 
 void render_scenery_recreate(struct RenderScenery* render_scenery, struct GPUAPI* gpu_api) {
   sprite_recreate(&render_scenery->texture, gpu_api);
-}
+}*/

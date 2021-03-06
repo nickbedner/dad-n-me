@@ -1,4 +1,4 @@
-#include "render/renderwilbur.h"
+/*#include "render/renderwilbur.h"
 
 int render_wilbur_init(struct RenderWilbur* render_wilbur, struct GPUAPI* gpu_api, struct Game* game) {
   wilbur_init(&render_wilbur->wilbur, game->game_state);
@@ -152,4 +152,4 @@ void render_wilbur_recreate(struct RenderWilbur* render_wilbur, struct GPUAPI* g
   sprite_recreate(&render_wilbur->shadow, gpu_api);
   sprite_animation_recreate(&render_wilbur->standing_animation, gpu_api);
   sprite_animation_recreate(&render_wilbur->walking_animation, gpu_api);
-}
+}*/

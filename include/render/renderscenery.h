@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #ifndef RENDER_SCENERY_H
 #define RENDER_SCENERY_H
 
@@ -27,3 +27,4 @@ void render_scenery_update_uniforms(struct RenderScenery* render_scenery, struct
 void render_scenery_recreate(struct RenderScenery* render_scenery, struct GPUAPI* gpu_api);
 
 #endif  // RENDER_SCENERY_H
+*/

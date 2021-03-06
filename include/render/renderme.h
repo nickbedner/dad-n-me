@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #ifndef RENDER_ME_H
 #define RENDER_ME_H
 
@@ -30,3 +30,4 @@ void render_me_update_uniforms(struct RenderMe* render_me, struct GPUAPI* gpu_ap
 void render_me_recreate(struct RenderMe* render_me, struct GPUAPI* gpu_api);
 
 #endif  // RENDER_ME_H
+*/
