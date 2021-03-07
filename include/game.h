@@ -63,6 +63,85 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time);
 void game_update_camera(struct Game* game, struct Engine* engine);
 void game_update_input(struct Game* game, struct Engine* engine);
 
+static inline void game_check_for_window_resize(struct Game* game, struct GPUAPI* gpu_api) {
+  // When the window is resized everything must be recreated in vulkan
+  if (gpu_api->vulkan_state->reset_shaders) {
+    gpu_api->vulkan_state->reset_shaders = 0;
+    vkDeviceWaitIdle(gpu_api->vulkan_state->device);
+
+    fxaa_shader_delete(&game->fxaa_shader, gpu_api);
+    fxaa_shader_init(&game->fxaa_shader, gpu_api);
+    game->fxaa_shader.on = 0;
+
+    sprite_shader_delete(&game->sprite_shader, gpu_api);
+    sprite_shader_init(&game->sprite_shader, gpu_api, 0);
+
+    sprite_animation_shader_delete(&game->sprite_animation_shader, gpu_api);
+    sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api, 0);
+
+    /*for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_render_list); entity_num++) {
+      struct Entity* entity = array_list_get(&game->stage_entity_render_list, entity_num);
+      (*entity->recreate_func)(entity->entity_data, gpu_api);
+    }*/
+  }
+}
+
+static inline void game_update_jobs(struct Game* game, struct GPUAPI* gpu_api) {
+  // Update sprites
+  /*struct EntityUpdateData* sprites_update_data_pool = malloc(sizeof(struct EntityUpdateData) * array_list_size(&game->stage_entity_render_list));
+  struct Job* sprites_update_job_pool = malloc(sizeof(struct Job) * array_list_size(&game->stage_entity_render_list));
+  for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_render_list); entity_num++) {
+    struct Entity* entity = array_list_get(&game->stage_entity_render_list, entity_num);
+
+    sprites_update_data_pool[entity_num] = (struct EntityUpdateData){.game_handle = game, .entity_handle = entity, .delta_time = delta_time};
+    sprites_update_job_pool[entity_num] = (struct Job){.job_func = entity_update_job, .job_data = &sprites_update_data_pool[entity_num]};
+    job_system_enqueue(game->job_system, &sprites_update_job_pool[entity_num]);
+  }
+  job_system_start_threads(game->job_system);
+  job_system_wait(game->job_system);
+
+  free(scenery_update_data_pool);
+  free(scenery_update_job_pool);
+  free(sprites_update_data_pool);
+  free(sprites_update_job_pool);*/
+}
+
+static inline void game_sort_render_entites(struct Game* game, struct GPUAPI* gpu_api, struct ArrayList* sorted_render_list) {
+  char* sorted_render_list_key = NULL;
+  struct MapIter sorted_render_list_iter = map_iter();
+  // Build list of entities that need to be rendered
+  while ((sorted_render_list_key = map_next(&game->render_registry.registry, &sorted_render_list_iter)))
+    array_list_add(sorted_render_list, sorted_render_list_key);
+
+  // TODO: Look into multithreaded merge sort
+  // Sort render list for draw order
+  for (int render_num = 0; render_num < array_list_size(sorted_render_list); render_num++) {
+    for (int other_render_num = render_num; other_render_num > 0; other_render_num--) {
+      struct Position* position_one = component_registry_get(&game->position_registry, array_list_get(sorted_render_list, other_render_num));
+      struct Position* position_two = component_registry_get(&game->position_registry, array_list_get(sorted_render_list, other_render_num - 1));
+
+      // TODO: Check within float range
+      if (position_one->z > position_two->z)
+        continue;
+
+      // TODO: Add if within z range then check y range/implicit function
+      //if (entity_one->position.y - entity_one->height / 2.0f < entity_two->position.y - entity_two->height / 2.0f)
+      //  continue;
+
+      array_list_swap(sorted_render_list, other_render_num, other_render_num - 1);
+    }
+  }
+}
+
+static inline void game_render_entities(struct Game* game, struct GPUAPI* gpu_api, struct ArrayList* sorted_render_list) {
+  for (int render_num = 0; render_num < array_list_size(sorted_render_list); render_num++) {
+    char* entity_id = array_list_get(sorted_render_list, render_num);
+    struct Render* next_render = component_registry_get(&game->render_registry, entity_id);
+    sprite_update_uniforms(&next_render->sprite, gpu_api);
+    sprite_render(&next_render->sprite, gpu_api);
+  }
+}
+
 static inline void game_hotswap_scenery(struct Game* game, struct GPUAPI* gpu_api) {
   // Clear any existing scenery
   if (game->scenery_registry.registry.num_nodes > 0) {

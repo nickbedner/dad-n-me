@@ -19,31 +19,15 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   audio_clip_init(&game->music_clip, resource_manager->music_clip_cache, MUSIC_AUDIO_CLIP, 1, 0.75f, 0.025f);
   audio_manager_play_audio_clip(&resource_manager->audio_manager, &game->music_clip);
 
-  // Creat FXAA shader
+  // Creat FXAA shader, off be default
   fxaa_shader_init(&game->fxaa_shader, gpu_api);
   game->fxaa_shader.on = 0;
-
   // Create static and dynamic sprite shaders
   sprite_shader_init(&game->sprite_shader, gpu_api, 0);
   sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api, 0);
 
   // Create camera to follow entities
   player_camera_init(&game->player_camera);
-
-  //game->render_me = calloc(1, sizeof(struct RenderMe));
-  //render_me_init(game->render_me, gpu_api, game);
-  //game->render_me->me.entity.position = (vec3){.x = -3.5f, .y = -1.125, .z = 0.0f};
-
-  //game->render_wilbur = calloc(1, sizeof(struct RenderWilbur));
-  //render_wilbur_init(game->render_wilbur, gpu_api, game);
-  //game->render_wilbur->wilbur.entity.position = (vec3){.x = 0.0f, .y = -0.5, .z = 0.0f};
-  //game->player_camera.focus_entity = &game->render_wilbur->wilbur.entity;
-  //game->player_camera.camera.position.x = game->render_wilbur->wilbur.entity.position.x;
-  //game->player_camera.camera.position.y = game->render_wilbur->wilbur.entity.position.y;
-
-  //array_list_init(&game->stage_entity_render_list);
-  //array_list_add(&game->stage_entity_render_list, &game->render_me->me.entity);
-  //array_list_add(&game->stage_entity_render_list, &game->render_wilbur->wilbur.entity);
 
   // Init ecs
   vector_init(&game->entities, sizeof(struct Entity));
@@ -91,88 +75,19 @@ void game_delete(struct Game* game, struct Mana* mana) {
 
 void game_update(struct Game* game, struct Mana* mana, double delta_time) {
   struct GPUAPI* gpu_api = &mana->engine.gpu_api;
-  // Note: When the window is resized everything must be recreated in vulkan
-  if (mana->engine.gpu_api.vulkan_state->reset_shaders) {
-    mana->engine.gpu_api.vulkan_state->reset_shaders = 0;
-    vkDeviceWaitIdle(mana->engine.gpu_api.vulkan_state->device);
-
-    fxaa_shader_delete(&game->fxaa_shader, gpu_api);
-    fxaa_shader_init(&game->fxaa_shader, gpu_api);
-    game->fxaa_shader.on = 0;
-
-    sprite_shader_delete(&game->sprite_shader, gpu_api);
-    sprite_shader_init(&game->sprite_shader, gpu_api, 0);
-
-    sprite_animation_shader_delete(&game->sprite_animation_shader, gpu_api);
-    sprite_animation_shader_init(&game->sprite_animation_shader, gpu_api, 0);
-
-    /*for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_render_list); entity_num++) {
-      struct Entity* entity = array_list_get(&game->stage_entity_render_list, entity_num);
-      (*entity->recreate_func)(entity->entity_data, gpu_api);
-    }*/
-  }
+  game_check_for_window_resize(game, gpu_api);
 
   // Update camera and user input
   player_camera_update(&game->player_camera, delta_time);
   game_update_input(game, &mana->engine);
 
-  // TODO: Make this less messy with inlined function
-  // Update scenery
-  /*struct EntityUpdateData* scenery_update_data_pool = malloc(sizeof(struct EntityUpdateData) * array_list_size(&game->scenery_render_list));
-  struct Job* scenery_update_job_pool = malloc(sizeof(struct Job) * array_list_size(&game->scenery_render_list));
-  for (int entity_num = 0; entity_num < array_list_size(&game->scenery_render_list); entity_num++) {
-    struct Entity* entity = array_list_get(&game->scenery_render_list, entity_num);
-
-    scenery_update_data_pool[entity_num] = (struct EntityUpdateData){.game_handle = game, .entity_handle = entity, .delta_time = delta_time};
-    scenery_update_job_pool[entity_num] = (struct Job){.job_func = entity_update_job, .job_data = &scenery_update_data_pool[entity_num]};
-    job_system_enqueue(game->job_system, &scenery_update_job_pool[entity_num]);
-  }
-  // Update sprites
-  struct EntityUpdateData* sprites_update_data_pool = malloc(sizeof(struct EntityUpdateData) * array_list_size(&game->stage_entity_render_list));
-  struct Job* sprites_update_job_pool = malloc(sizeof(struct Job) * array_list_size(&game->stage_entity_render_list));
-  for (int entity_num = 0; entity_num < array_list_size(&game->stage_entity_render_list); entity_num++) {
-    struct Entity* entity = array_list_get(&game->stage_entity_render_list, entity_num);
-
-    sprites_update_data_pool[entity_num] = (struct EntityUpdateData){.game_handle = game, .entity_handle = entity, .delta_time = delta_time};
-    sprites_update_job_pool[entity_num] = (struct Job){.job_func = entity_update_job, .job_data = &sprites_update_data_pool[entity_num]};
-    job_system_enqueue(game->job_system, &sprites_update_job_pool[entity_num]);
-  }
-  job_system_start_threads(game->job_system);
-  job_system_wait(game->job_system);
-
-  free(scenery_update_data_pool);
-  free(scenery_update_job_pool);
-  free(sprites_update_data_pool);
-  free(sprites_update_job_pool);*/
+  // Enqueue and process jobs
+  game_update_jobs(game, gpu_api);
 
   // Build and sort list of entities to render
   struct ArrayList sorted_render_list = {0};
   array_list_init(&sorted_render_list);
-
-  char* sorted_render_list_key = NULL;
-  struct MapIter sorted_render_list_iter = map_iter();
-  // Build list of entities that need to be rendered
-  while ((sorted_render_list_key = map_next(&game->render_registry.registry, &sorted_render_list_iter)))
-    array_list_add(&sorted_render_list, sorted_render_list_key);
-
-  // TODO: Look into multithreaded merge sort
-  // Sort render list for draw order
-  for (int render_num = 0; render_num < array_list_size(&sorted_render_list); render_num++) {
-    for (int other_render_num = render_num; other_render_num > 0; other_render_num--) {
-      struct Position* position_one = component_registry_get(&game->position_registry, array_list_get(&sorted_render_list, other_render_num));
-      struct Position* position_two = component_registry_get(&game->position_registry, array_list_get(&sorted_render_list, other_render_num - 1));
-
-      // TODO: Check within float range
-      if (position_one->z > position_two->z)
-        continue;
-
-      // TODO: Add if within z range then check y range/implicit function
-      //if (entity_one->position.y - entity_one->height / 2.0f < entity_two->position.y - entity_two->height / 2.0f)
-      //  continue;
-
-      array_list_swap(&sorted_render_list, other_render_num, other_render_num - 1);
-    }
-  }
+  game_sort_render_entites(game, gpu_api, &sorted_render_list);
 
   // Update projection and view matrices
   gpu_api->vulkan_state->gbuffer->projection_matrix = camera_get_projection_matrix(&game->player_camera.camera, game->window);
@@ -181,14 +96,9 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
   // TODO: Implement instanced rendering and texture atlas
   // Start blitting to the gbuffer
   gbuffer_start(gpu_api->vulkan_state->gbuffer, gpu_api->vulkan_state);
-  for (int render_num = 0; render_num < array_list_size(&sorted_render_list); render_num++) {
-    char* entity_id = array_list_get(&sorted_render_list, render_num);
-    struct Render* next_render = component_registry_get(&game->render_registry, entity_id);
-    sprite_update_uniforms(&next_render->sprite, gpu_api);
-    sprite_render(&next_render->sprite, gpu_api);
-  }
+  game_render_entities(game, gpu_api, &sorted_render_list);
   gbuffer_stop(gpu_api->vulkan_state->gbuffer, gpu_api->vulkan_state);
-
+  // Free memory allocated inside arraylist
   array_list_delete(&sorted_render_list);
 
   // Blit gbuffer to post process ping pong
@@ -205,7 +115,7 @@ void game_update_input(struct Game* game, struct Engine* engine) {
 
   struct InputManager* input_manager = game->window->input_manager;
 
-  // Exit game
+  // Signals windows to close, will call delete functions
   if (input_manager->keys[GLFW_KEY_ESCAPE].state == PRESSED)
     glfwSetWindowShouldClose(engine->graphics_library.glfw_library.glfw_window, 1);
 
@@ -216,12 +126,6 @@ void game_update_input(struct Game* game, struct Engine* engine) {
   // Reload scenery from xml
   if (input_manager->keys[GLFW_KEY_2].pushed == 1)
     game_hotswap_scenery(game, &engine->gpu_api);
-
-  //if (input_manager->keys[GLFW_KEY_3].pushed == 1)
-  //  game->player_camera.focus_entity = &game->render_me->me.entity;
-  //
-  //if (input_manager->keys[GLFW_KEY_4].pushed == 1)
-  //  game->player_camera.focus_entity = &game->render_wilbur->wilbur.entity;
 
   // Change master volume levels
   if (input_manager->keys[GLFW_KEY_O].pushed == 1) {
