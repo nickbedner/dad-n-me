@@ -19,6 +19,6 @@ struct ResourceManager {
 };
 
 int resource_manager_init(struct ResourceManager* resource_manager, struct GPUAPI* gpu_api);
-void resource_manager_delete(struct ResourceManager* resource_manager);
+void resource_manager_delete(struct ResourceManager* resource_manager, struct GPUAPI* gpu_api);
 
 #endif  // RESOURCE_MANAGER_H

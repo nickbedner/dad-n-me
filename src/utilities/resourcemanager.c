@@ -34,7 +34,9 @@ int resource_manager_init(struct ResourceManager* resource_manager, struct GPUAP
   return 0;
 }
 
-void resource_manager_delete(struct ResourceManager* resource_manager) {
+void resource_manager_delete(struct ResourceManager* resource_manager, struct GPUAPI* gpu_api) {
+  texture_cache_delete(&resource_manager->texture_cache, gpu_api);
+
   audio_clip_cache_delete(resource_manager->music_clip_cache);
   audio_clip_cache_delete(resource_manager->fart_clip_cache);
   audio_manager_delete(&resource_manager->audio_manager);
