@@ -5,7 +5,10 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   game->window = window;
 
   // Connect to server or start local server
-  dad_n_me_server_init(&game->dad_n_me_server, DAD_N_ME_SERVER_EMULATE);
+  game->game_state = calloc(1, sizeof(struct GameState));
+  game_state_init(game->game_state);
+  dad_n_me_server_init(&game->dad_n_me_server, DAD_N_ME_SERVER_EMULATE, game->game_state);
+  // Create local state, if emulating then that is local state
 
   // Load game assets
   resource_manager_init(&game->resource_manager, gpu_api);
@@ -19,7 +22,7 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   audio_clip_init(&game->music_clip, resource_manager->music_clip_cache, MUSIC_AUDIO_CLIP, 1, 0.75f, 0.025f);
   audio_manager_play_audio_clip(&resource_manager->audio_manager, &game->music_clip);
 
-  // Creat FXAA shader, off be default
+  // Create FXAA shader, off be default
   fxaa_shader_init(&game->fxaa_shader, gpu_api);
   game->fxaa_shader.on = 0;
   // Create static and dynamic sprite shaders
@@ -30,10 +33,6 @@ void game_init(struct Game* game, struct Mana* mana, struct Window* window) {
   player_camera_init(&game->player_camera);
 
   // Init ecs
-  vector_init(&game->entities, sizeof(struct Entity));
-  component_registry_init(&game->position_registry, sizeof(struct Position));
-  component_registry_init(&game->dimensions_registry, sizeof(struct Dimensions));
-  component_registry_init(&game->scenery_registry, sizeof(struct Scenery));
   component_registry_init(&game->render_registry, sizeof(struct Render));
 
   // Load stage scenery
@@ -54,11 +53,7 @@ void game_delete(struct Game* game, struct Mana* mana) {
     sprite_delete(&((struct Render*)map_get(&game->render_registry.registry, render_list_key))->sprite, gpu_api);
 
   // Delete ecs
-  vector_delete(&game->entities);
-  component_registry_delete(&game->position_registry);
-  component_registry_delete(&game->dimensions_registry);
   component_registry_delete(&game->render_registry);
-  component_registry_delete(&game->scenery_registry);
 
   // Delete shaders
   sprite_animation_shader_delete(&game->sprite_animation_shader, gpu_api);
@@ -109,13 +104,13 @@ void game_update(struct Game* game, struct Mana* mana, double delta_time) {
 }
 
 void game_update_input(struct Game* game, struct Engine* engine) {
-  // If the windows is not in focues, ignore user input
+  // If the window is not in focues, ignore user input
   if (glfwGetWindowAttrib(engine->graphics_library.glfw_library.glfw_window, GLFW_FOCUSED) == 0)
     return;
 
   struct InputManager* input_manager = game->window->input_manager;
 
-  // Signals windows to close, will call delete functions
+  // Signals window to close, will call delete functions
   if (input_manager->keys[GLFW_KEY_ESCAPE].state == PRESSED)
     glfwSetWindowShouldClose(engine->graphics_library.glfw_library.glfw_window, 1);
 

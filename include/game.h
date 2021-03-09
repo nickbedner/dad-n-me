@@ -10,6 +10,7 @@
 #include <core/position.h>
 #include <core/scenery.h>
 #include <dadnmeserver.h>
+#include <gamestate.h>
 #include <mana/audio/audiomanager.h>
 #include <mana/core/inputmanager.h>
 #include <mana/graphics/entities/sprite.h>
@@ -43,17 +44,9 @@ struct Game {
 
   struct AudioClip music_clip;
 
-  // NOTE: If running server locally, share memory of game states
   struct DadNMeServer dad_n_me_server;
   struct GameState* game_state;
 
-  //////////////////////////////////
-  // TODO: Move to server
-  struct ComponentRegistry position_registry;
-  struct ComponentRegistry dimensions_registry;
-  struct ComponentRegistry scenery_registry;
-  struct Vector entities;
-  //////////////////////////////////
   struct ComponentRegistry render_registry;
 };
 
@@ -117,8 +110,8 @@ static inline void game_sort_render_entites(struct Game* game, struct GPUAPI* gp
   // Sort render list for draw order
   for (int render_num = 0; render_num < array_list_size(sorted_render_list); render_num++) {
     for (int other_render_num = render_num; other_render_num > 0; other_render_num--) {
-      struct Position* position_one = component_registry_get(&game->position_registry, array_list_get(sorted_render_list, other_render_num));
-      struct Position* position_two = component_registry_get(&game->position_registry, array_list_get(sorted_render_list, other_render_num - 1));
+      struct Position* position_one = component_registry_get(&game->game_state->position_registry, array_list_get(sorted_render_list, other_render_num));
+      struct Position* position_two = component_registry_get(&game->game_state->position_registry, array_list_get(sorted_render_list, other_render_num - 1));
 
       // TODO: Check within float range
       if (position_one->z > position_two->z)
@@ -144,27 +137,27 @@ static inline void game_render_entities(struct Game* game, struct GPUAPI* gpu_ap
 
 static inline void game_hotswap_scenery(struct Game* game, struct GPUAPI* gpu_api) {
   // Clear any existing scenery
-  if (game->scenery_registry.registry.num_nodes > 0) {
+  if (game->game_state->scenery_registry.registry.num_nodes > 0) {
     char* scenery_key = NULL;
     struct MapIter scenery_iter = map_iter();
-    while ((scenery_key = map_next(&game->scenery_registry.registry, &scenery_iter))) {
+    while ((scenery_key = map_next(&game->game_state->scenery_registry.registry, &scenery_iter))) {
       sprite_delete(&((struct Render*)map_get(&game->render_registry.registry, scenery_key))->sprite, gpu_api);
 
-      component_registry_remove(&game->position_registry, scenery_key);
-      component_registry_remove(&game->dimensions_registry, scenery_key);
+      component_registry_remove(&game->game_state->position_registry, scenery_key);
+      component_registry_remove(&game->game_state->dimensions_registry, scenery_key);
       component_registry_remove(&game->render_registry, scenery_key);
 
       // TODO: Write better way to remove single entity
-      for (int entity_num = 0; entity_num < vector_size(&game->entities); entity_num++) {
-        if (strcmp(scenery_key, ((struct Entity*)vector_get(&game->entities, entity_num))->entity_id)) {
-          vector_remove(&game->entities, entity_num);
+      for (int entity_num = 0; entity_num < vector_size(&game->game_state->entities); entity_num++) {
+        if (strcmp(scenery_key, ((struct Entity*)vector_get(&game->game_state->entities, entity_num))->entity_id)) {
+          vector_remove(&game->game_state->entities, entity_num);
           break;
         }
       }
     }
 
-    component_registry_delete(&game->scenery_registry);
-    component_registry_init(&game->scenery_registry, sizeof(struct Scenery));
+    component_registry_delete(&game->game_state->scenery_registry);
+    component_registry_init(&game->game_state->scenery_registry, sizeof(struct Scenery));
   }
 
   // Load scenery from xml file
@@ -194,19 +187,19 @@ static inline void game_hotswap_scenery(struct Game* game, struct GPUAPI* gpu_ap
     for (int repeat_num = 0; repeat_num < repeat_factor; repeat_num++) {
       struct Entity new_scenery_entity = {0};
       entity_init(&new_scenery_entity);
-      vector_push_back(&game->entities, &new_scenery_entity);
+      vector_push_back(&game->game_state->entities, &new_scenery_entity);
 
       struct Scenery new_scenery = (struct Scenery){.texture_path = xml_node_get_attribute(position_node, "path"), .repeat_factor = repeat_factor, .offset = offset};
-      component_registry_set(&game->scenery_registry, &new_scenery_entity, &new_scenery);
+      component_registry_set(&game->game_state->scenery_registry, &new_scenery_entity, &new_scenery);
 
       struct Render new_scenery_render = {0};
       sprite_init(&new_scenery_render.sprite, gpu_api, &game->sprite_shader.shader, texture_cache_get(&game->resource_manager.texture_cache, new_scenery.texture_path));
 
       struct Dimensions new_scenery_dimensions = {.direction = 1.0f, .scale = scale, .height = new_scenery_render.sprite.height * scale, .width = new_scenery_render.sprite.width * scale};
-      component_registry_set(&game->dimensions_registry, &new_scenery_entity, &new_scenery_dimensions);
+      component_registry_set(&game->game_state->dimensions_registry, &new_scenery_entity, &new_scenery_dimensions);
 
       struct Position new_scenery_position = (struct Position){.x = atof(xml_node_get_data(xml_node_get_child(position_node, "x"))) + (new_scenery_dimensions.width * repeat_num) * new_scenery.offset, .y = atof(xml_node_get_data(xml_node_get_child(position_node, "y"))), .z = atof(xml_node_get_data(xml_node_get_child(position_node, "z")))};
-      component_registry_set(&game->position_registry, &new_scenery_entity, &new_scenery_position);
+      component_registry_set(&game->game_state->position_registry, &new_scenery_entity, &new_scenery_position);
 
       new_scenery_render.sprite.position = (vec3){.x = new_scenery_position.x, .y = new_scenery_position.y, .z = new_scenery_position.z};
       new_scenery_render.sprite.scale = (vec3){.x = scale, .y = scale, .z = scale};
